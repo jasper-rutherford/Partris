@@ -28,7 +28,9 @@ public class Grid {
   public float cornerY;
 
   //tracks if a swap just occurred
-  boolean swapped;
+  public boolean swapped;
+
+  public boolean droplines;
 
   //default constructor
   public Grid() {
@@ -50,6 +52,9 @@ public class Grid {
 
     //swapped defaults to false
     swapped = false;
+
+    //droplines defaults to true
+    droplines = true;
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -140,6 +145,7 @@ public class Grid {
           for (int x = 0; x < gridWidth; x++) {
             blocks[x][y].active = blocks[x][y - 1].active;
             blocks[x][y - 1].active = false;
+            blocks[x][y].setColour(blocks[x][y - 1].colour);
           }
         }
       }
@@ -209,6 +215,62 @@ public class Grid {
     //render the falling tetromino
     tetromino.render();
 
+    //draw the drop lines if enabled
+    if (droplines) {
+      int offsetX = tetromino.offsetX;
+      int offsetY = tetromino.offsetY;
+
+      int leftX = 5;
+      int rightX = -5;
+
+      for (int lcv = 0; lcv < 4; lcv++) {
+        int someX = tetromino.blocks[lcv].x;
+        if (someX < leftX) {
+          leftX = someX;
+        }
+        if (someX > rightX) {
+          rightX = someX;
+        }
+      }
+
+      int leftY = -5;
+      int rightY = -5;
+      for (int lcv = 0; lcv < 4; lcv++) {
+        int someX = tetromino.blocks[lcv].x;
+        int someY = tetromino.blocks[lcv].y;
+        if (someX == leftX && someY > leftY) {
+          leftY = someY;
+        }
+        if (someX == rightX && someY > rightY) {
+          rightY = someY;
+        }
+      }
+
+      int leftFloorY = gridHeight;
+      int rightFloorY = gridHeight;
+      for (int lcv = 0; lcv < gridHeight; lcv++) {
+        Block leftBlock = blocks[leftX + offsetX][lcv];
+        Block rightBlock = blocks[rightX + offsetX][lcv];
+
+        if (leftBlock.active && leftBlock.y < leftFloorY) {
+          leftFloorY = leftBlock.y;
+        }
+        if (rightBlock.active && rightBlock.y < rightFloorY) {
+          rightFloorY = rightBlock.y;
+        }
+      }
+
+      stroke(255, 220, 122);
+      pushMatrix();
+      translate(cornerX, cornerY);
+      println("offset:", offsetX, offsetY);
+      println(leftX, leftY, rightX, rightY);
+      line((leftX + offsetX) * blockWidth, (leftY + offsetY + 1) * blockWidth, (leftX + offsetX) * blockWidth, leftFloorY * blockWidth); 
+      line((rightX + offsetX + 1) * blockWidth, (rightY + offsetY + 1) * blockWidth, (rightX + offsetX + 1) * blockWidth, rightFloorY * blockWidth); 
+      popMatrix();
+      stroke(0, 0, 0);
+    }
+
     //draw grid border
     strokeWeight(4);
     noFill();
@@ -272,11 +334,11 @@ public class Grid {
     strokeWeight(4);
     rect(cornerX + 11 * blockWidth, cornerY, 6 * blockWidth, 18 * blockWidth);
     strokeWeight(1);
-    
+
     //the queued tetrominos
     for (int loop = 0; loop < 3; loop++) {
       Tetromino queued = queue[loop];
-      
+
       //calculate width and height of the tetromino
       int xMin = queued.blocks[0].x;
       int xMax = xMin;

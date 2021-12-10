@@ -9,6 +9,8 @@
 public class Tetromino {
   public int shape;
   public int rotation;
+
+  public int colour[];
   public Block blocks[];
 
   //the x,y coords of the central block of the piece
@@ -17,13 +19,37 @@ public class Tetromino {
 
   //creates a tetromino with a random shape and rotation
   public Tetromino() {
+    //get random shape and rotation
+    shape = int(random(0, 7));
+    rotation = int(random(0, 4));
+
+    //sets up the tetromino with the random shape and rotation
+    setupTetromino(shape, rotation);
+  }
+
+  //creates a tetromino with defined shape and rotation
+  public Tetromino(int shape, int rotation) {
+
+    //sets up the tetromino with the given shape and rotation
+    setupTetromino(shape, rotation);
+  }
+
+  public void setupTetromino(int shape, int rotation) {
+
 
     //instantiate blocks
     blocks = new Block[4];
 
-    //get random shape and rotation
-    shape = int(random(0, 7));
-    rotation = int(random(0, 4));
+    //set shape and rotation
+    this.shape = shape;
+    this.rotation = rotation;
+
+
+    //generate a random color (TODO: replace this with type/particle or something)
+    colour = new int[3];
+    colour[0] = int(random(0, 255));
+    colour[1] = int(random(0, 255));
+    colour[2] = int(random(0, 255));
 
     //copy in relevant blocks from the template
     copyTemplate();
@@ -44,24 +70,6 @@ public class Tetromino {
     if (collision(0, 0)) {
       lose();
     }
-  }
-
-  //creates a tetromino with defined shape and rotation
-  public Tetromino(int shape, int rotation) {
-
-    //instantiate blocks
-    blocks = new Block[4];
-
-    //get random shape and rotation
-    this.shape = shape;
-    this.rotation = rotation;
-
-    //copy in relevant blocks from the template
-    copyTemplate();
-
-    //x offset is at about the center of the screen
-    offsetX = (gridWidth - 1) / 2;
-    offsetY = 0;
   }
 
   public void left() {
@@ -133,6 +141,7 @@ public class Tetromino {
 
     //create new tetromino with rotation from current location
     Tetromino rotated = new Tetromino(shape, (rotation + 1) % 4);
+    rotated.setColour(colour);
     rotated.offsetX = offsetX;
     rotated.offsetY = offsetY;
 
@@ -179,7 +188,15 @@ public class Tetromino {
       Block block = blocks[lcv];
 
       grid.blocks[block.x + offsetX][block.y + offsetY].active = true;
+      grid.blocks[block.x + offsetX][block.y + offsetY].setColour(colour);
     }
+  }
+
+  void setColour(int colour[]) {
+    this.colour = new int[3];
+    this.colour[0] = colour[0];
+    this.colour[1] = colour[1];
+    this.colour[2] = colour[2];
   }
 
   //checks if the tetromino would collide with anything if it moved according to the given x, y
@@ -210,14 +227,18 @@ public class Tetromino {
     for (int lcv = 0; lcv < 4; lcv++) {
       Block block = templates[shape][rotation][lcv];
       blocks[lcv] = b(block.x, block.y);
+      blocks[lcv].setColour(colour);
     }
   }
 
   public void render() {
-    fill(235, 64, 52);
+    println("\nOffset:", offsetX, offsetY);
+    
+    fill(colour[0], colour[1], colour[2]);
     for (int lcv = 0; lcv < 4; lcv++) {
       Block block = blocks[lcv];
       rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth, blockWidth, blockWidth);
+      println(block.x, block.y);
     }
   }
 }
