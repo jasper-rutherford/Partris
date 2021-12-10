@@ -84,7 +84,7 @@ void keyPressed() {
 
   //space slams
   if (key == ' ') {
-    grid.tetromino.slam();
+    grid.tetromino.slam(true);
   }
 
   //rotates the tetromino 90 degrees clockwise

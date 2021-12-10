@@ -20,7 +20,7 @@ public class Tetromino {
   //creates a tetromino with a random shape and rotation
   public Tetromino() {
     //get random shape and rotation
-    shape = int(random(0, 7));
+    shape = grid.pickShape();         //pickShape uses 7 bag
     rotation = int(random(0, 4));
 
     //sets up the tetromino with the random shape and rotation
@@ -108,7 +108,7 @@ public class Tetromino {
     }
   }
 
-  public void slam() {
+  public void slam(boolean place) {
 
     //drop tetromino as far as it will go
     boolean slamming = true;
@@ -125,12 +125,15 @@ public class Tetromino {
       }
     }
 
-    //put the block on the grid and create a new tetromino
-    place();
-    grid.checkRows();
+    //if place is true
+    if (place) {
+      //put the block on the grid and create a new tetromino 
+      place();
+      grid.checkRows();
 
-    //get the next tetromino
-    grid.newTetromino();
+      //get the next tetromino
+      grid.newTetromino();
+    }
   }
 
   public void rotateLeft() {
@@ -232,13 +235,10 @@ public class Tetromino {
   }
 
   public void render() {
-    println("\nOffset:", offsetX, offsetY);
-    
-    fill(colour[0], colour[1], colour[2]);
+    fill(colour[0], colour[1], colour[2], grid.alpha);
     for (int lcv = 0; lcv < 4; lcv++) {
       Block block = blocks[lcv];
       rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth, blockWidth, blockWidth);
-      println(block.x, block.y);
     }
   }
 }

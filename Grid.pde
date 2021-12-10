@@ -30,10 +30,16 @@ public class Grid {
   //tracks if a swap just occurred
   public boolean swapped;
 
-  public boolean droplines;
+  public boolean ghostBlock;
+
+  public int alpha;
+
+  public ArrayList<Integer> shapes;
 
   //default constructor
   public Grid() {
+    shapes = new ArrayList<Integer>();
+    fillShapes();
     //fill the grid with inactive blocks
     blocks = new Block[gridWidth][gridHeight];
     for (int x = 0; x < gridWidth; x++) {
@@ -54,7 +60,28 @@ public class Grid {
     swapped = false;
 
     //droplines defaults to true
-    droplines = true;
+    ghostBlock = true;
+
+    alpha = 255;
+  }
+
+  //refills the shapes list with all shape options
+  void fillShapes() {
+    for (int lcv = 0; lcv < 7; lcv++) {
+      shapes.add(lcv);
+    }
+  }
+
+  //picks a random shape from the list, removes it from the list, and returns it
+  int pickShape() {
+    if (shapes.size() == 0) {
+      fillShapes();
+    }
+
+    int index = int(random(0, shapes.size()));
+    int shape = shapes.get(index);
+    shapes.remove(index);
+    return shape;
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -202,7 +229,7 @@ public class Grid {
 
   void render() {
     //draw rectangle background
-    fill(66, 135, 245);
+    fill(200, 200, 200);
     rect(cornerX, cornerY, totWidth, totHeight);
 
     //loop through/render full blocks
@@ -215,60 +242,78 @@ public class Grid {
     //render the falling tetromino
     tetromino.render();
 
-    //draw the drop lines if enabled
-    if (droplines) {
-      int offsetX = tetromino.offsetX;
-      int offsetY = tetromino.offsetY;
+    //draw the ghost block if enabled
+    if (ghostBlock) {
+      //duplicate the tetromino
+      Tetromino ghost = new Tetromino(tetromino.shape, tetromino.rotation);      
+      ghost.setColour(tetromino.colour);
+      ghost.offsetX = tetromino.offsetX;
+      ghost.offsetY = tetromino.offsetY;
 
-      int leftX = 5;
-      int rightX = -5;
+      //slam the duplicate but don't place it
+      ghost.slam(false);
 
-      for (int lcv = 0; lcv < 4; lcv++) {
-        int someX = tetromino.blocks[lcv].x;
-        if (someX < leftX) {
-          leftX = someX;
-        }
-        if (someX > rightX) {
-          rightX = someX;
-        }
-      }
+      //change the ghost's colors somehow
+      alpha = 127;
 
-      int leftY = -5;
-      int rightY = -5;
-      for (int lcv = 0; lcv < 4; lcv++) {
-        int someX = tetromino.blocks[lcv].x;
-        int someY = tetromino.blocks[lcv].y;
-        if (someX == leftX && someY > leftY) {
-          leftY = someY;
-        }
-        if (someX == rightX && someY > rightY) {
-          rightY = someY;
-        }
-      }
+      //render the ghost
+      ghost.render();
 
-      int leftFloorY = gridHeight;
-      int rightFloorY = gridHeight;
-      for (int lcv = 0; lcv < gridHeight; lcv++) {
-        Block leftBlock = blocks[leftX + offsetX][lcv];
-        Block rightBlock = blocks[rightX + offsetX][lcv];
+      //set alpha back
+      alpha = 255;
 
-        if (leftBlock.active && leftBlock.y < leftFloorY) {
-          leftFloorY = leftBlock.y;
-        }
-        if (rightBlock.active && rightBlock.y < rightFloorY) {
-          rightFloorY = rightBlock.y;
-        }
-      }
+      //int offsetX = tetromino.offsetX;
+      //int offsetY = tetromino.offsetY;
 
-      stroke(255, 220, 122);
-      pushMatrix();
-      translate(cornerX, cornerY);
-      println("offset:", offsetX, offsetY);
-      println(leftX, leftY, rightX, rightY);
-      line((leftX + offsetX) * blockWidth, (leftY + offsetY + 1) * blockWidth, (leftX + offsetX) * blockWidth, leftFloorY * blockWidth); 
-      line((rightX + offsetX + 1) * blockWidth, (rightY + offsetY + 1) * blockWidth, (rightX + offsetX + 1) * blockWidth, rightFloorY * blockWidth); 
-      popMatrix();
-      stroke(0, 0, 0);
+      //int leftX = 5;
+      //int rightX = -5;
+
+      //for (int lcv = 0; lcv < 4; lcv++) {
+      //  int someX = tetromino.blocks[lcv].x;
+      //  if (someX < leftX) {
+      //    leftX = someX;
+      //  }
+      //  if (someX > rightX) {
+      //    rightX = someX;
+      //  }
+      //}
+
+      //int leftY = -5;
+      //int rightY = -5;
+      //for (int lcv = 0; lcv < 4; lcv++) {
+      //  int someX = tetromino.blocks[lcv].x;
+      //  int someY = tetromino.blocks[lcv].y;
+      //  if (someX == leftX && someY > leftY) {
+      //    leftY = someY;
+      //  }
+      //  if (someX == rightX && someY > rightY) {
+      //    rightY = someY;
+      //  }
+      //}
+
+      //int leftFloorY = gridHeight;
+      //int rightFloorY = gridHeight;
+      //for (int lcv = 0; lcv < gridHeight; lcv++) {
+      //  Block leftBlock = blocks[leftX + offsetX][lcv];
+      //  Block rightBlock = blocks[rightX + offsetX][lcv];
+
+      //  if (leftBlock.active && leftBlock.y < leftFloorY) {
+      //    leftFloorY = leftBlock.y;
+      //  }
+      //  if (rightBlock.active && rightBlock.y < rightFloorY) {
+      //    rightFloorY = rightBlock.y;
+      //  }
+      //}
+
+      //stroke(255, 220, 122);
+      //pushMatrix();
+      //translate(cornerX, cornerY);
+      //println("offset:", offsetX, offsetY);
+      //println(leftX, leftY, rightX, rightY);
+      //line((leftX + offsetX) * blockWidth, (leftY + offsetY + 1) * blockWidth, (leftX + offsetX) * blockWidth, leftFloorY * blockWidth); 
+      //line((rightX + offsetX + 1) * blockWidth, (rightY + offsetY + 1) * blockWidth, (rightX + offsetX + 1) * blockWidth, rightFloorY * blockWidth); 
+      //popMatrix();
+      //stroke(0, 0, 0);
     }
 
     //draw grid border
