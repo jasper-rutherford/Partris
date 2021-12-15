@@ -1,7 +1,8 @@
 //use sprites instead of dots/squares?
 
+//fix I kicks
 
-
+//make all the methods public for consistency
 
 
 
@@ -13,14 +14,22 @@
  Written by Jasper Rutherford
  */
 
-float blockWidth = 30;
+int blockWidth = 30;
 int gridWidth = 10;
 int gridHeight = 20;
+
+int particlesPerEdge = 10;
+int particlesPerBlock = particlesPerEdge * particlesPerEdge;
+float particleWidth = int(blockWidth / particlesPerEdge);
 
 //how long in milliseconds that a block takes to fall one row
 float droptime = 1000;
 
-long oldTime;
+long oldDropTime;
+long oldParticleTime;
+int particleUpdate;
+
+int fuel = 5;
 
 Grid grid;
 
@@ -39,10 +48,12 @@ void setup() {
 
   //build the grid
   grid = new Grid();
+  grid.setupParticleStuff();
   grid.setupTetrominos();
 
-  //set oldTime to the current time
-  oldTime = System.currentTimeMillis();
+  //set oldTimes to the current time
+  oldDropTime = System.currentTimeMillis();
+  oldParticleTime = System.currentTimeMillis();
 }
 
 void lose() {
@@ -53,15 +64,23 @@ void lose() {
 void draw() {
   long currTime = System.currentTimeMillis();
 
-  if (!lost && currTime - oldTime >= droptime) {
-    oldTime = currTime;
+  particleUpdate++;
+  if (particleUpdate == 20) {
+    //update the particles as fast as they can (probably around 60 times a second?) TODO fix this comment
+    grid.updateParticles();
+    particleUpdate = 0;
+  }
+
+  //lower the block once a second (TODO: make this speed up over time)
+  if (!lost && currTime - oldDropTime >= droptime) {
+    oldDropTime = currTime;
 
     grid.tetromino.down();
   }
 
   background(60, 60, 60);
   grid.render();
-}
+}    
 
 //key controls
 void keyPressed() {
@@ -81,10 +100,17 @@ void keyPressed() {
     grid.tetromino.shape = (grid.tetromino.shape + 1) % 7;
     grid.tetromino.copyTemplate();
   }
+  //\ advances to next shape (if debug mode is enabled)
+  if (debug && key == '\\') {
+    grid.tetromino.setType(grid.pickType());
+    grid.tetromino.copyTemplate();
+  }
 
   //space slams
   if (key == ' ') {
     grid.tetromino.slam(true);
+    //set oldTime to the current time
+    oldDropTime = System.currentTimeMillis();
   }
 
   //rotates the tetromino 90 degrees clockwise
@@ -102,7 +128,27 @@ void keyPressed() {
   //moves the tetromino down one block
   if (keyCode == DOWN) {
     grid.tetromino.down();
+    //set oldTime to the current time
+    oldDropTime = System.currentTimeMillis();
   }
+}
+
+//lets me send in a Color to fill without any messing around
+void fill(Color colour) {
+  fill(colour.r, colour.g, colour.b, colour.a);
+}
+
+//randomizes the order of all the particles in the particleList
+void shuffleParticles() {
+  ArrayList<Particle> pList = grid.particleList;
+  ArrayList<Particle> temp = new ArrayList<Particle>();
+  int size = pList.size();
+  for (int lcv = 0; lcv < size; lcv++) {
+    int index = int(random(0, pList.size()));
+    temp.add(pList.get(index));
+    pList.remove(index);
+  }
+  grid.particleList = temp;
 }
 
 

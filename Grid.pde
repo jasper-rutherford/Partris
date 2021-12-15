@@ -1,7 +1,7 @@
 /**
  Final Project 5611
  Grid Class
- Contains all the blocks/tetrominos
+ Contains all the blocks/tetrominos/particles
  
  Written by Jasper Rutherford
  */
@@ -9,6 +9,7 @@
 public class Grid {
   //all the blocks in the grid
   public Block blocks[][];
+  public Particle particleGrid[][];
 
   //the current tetromino
   public Tetromino tetromino;
@@ -32,21 +33,14 @@ public class Grid {
 
   public boolean ghostBlock;
 
-  public int alpha;
-
   public ArrayList<Integer> shapes;
+  public ArrayList<String> types;
+  public HashMap<String, Color> typeColors;
+
+  public ArrayList<Particle> particleList;
 
   //default constructor
   public Grid() {
-    shapes = new ArrayList<Integer>();
-    fillShapes();
-    //fill the grid with inactive blocks
-    blocks = new Block[gridWidth][gridHeight];
-    for (int x = 0; x < gridWidth; x++) {
-      for (int y = 0; y < gridHeight; y++) {
-        blocks[x][y] = new Block(x, y);
-      }
-    }
 
     //calculate pixel width/height of the grid
     totWidth = blockWidth * gridWidth;
@@ -55,25 +49,51 @@ public class Grid {
     //calculate coords of top left corner of grid
     cornerX = (width - totWidth) / 2;
     cornerY = (height - totHeight) / 2;
-
+    
     //swapped defaults to false
     swapped = false;
 
     //droplines defaults to true
     ghostBlock = true;
 
-    alpha = 255;
+    shapes = new ArrayList<Integer>();
+    types = new ArrayList<String>();
+    typeColors = new HashMap<String, Color>();
+    fillShapes();
+    fillTypes();
+    fillTypeColors();
+
+    //fill the grid with inactive blocks
+    blocks = new Block[gridWidth][gridHeight];
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridHeight; y++) {
+        blocks[x][y] = new Block(x, y);
+      }
+    }
+  }
+
+  public void setupParticleStuff() {
+    //initialize the particleGrid and particleList
+    particleGrid = new Particle[gridWidth * particlesPerEdge][gridHeight * particlesPerEdge];
+    particleList = new ArrayList<Particle>();
+
+    //all particles default to air
+    for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
+      for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
+        particleGrid[x][y] = new Particle("Air", x, y);
+      }
+    }
   }
 
   //refills the shapes list with all shape options
-  void fillShapes() {
+  public void fillShapes() {
     for (int lcv = 0; lcv < 7; lcv++) {
       shapes.add(lcv);
     }
   }
 
   //picks a random shape from the list, removes it from the list, and returns it
-  int pickShape() {
+  public int pickShape() {
     if (shapes.size() == 0) {
       fillShapes();
     }
@@ -82,6 +102,75 @@ public class Grid {
     int shape = shapes.get(index);
     shapes.remove(index);
     return shape;
+  }
+
+  //fill the particle types
+  void fillTypes() {
+    types.add("Fire");
+    types.add("Water");
+    types.add("Plant");
+  }
+
+  //updates all the particles, then updates which blocks in the grid are active/full
+  public void updateParticles() {
+    
+    //update each particle's location
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      particleList.get(lcv).move();
+    }
+    //have all the particles interact
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      particleList.get(lcv).interact();
+    }
+    updateBlockStats();
+  }
+
+  //updates which blocks in the grid are active/full
+  public void updateBlockStats() {
+    //updates every block's activity and fullness in the grid
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridHeight; y++) {
+        //a block is active if it is not empty
+        boolean active = false;
+
+        //count how many particles are in the block
+        int numParticles = 0;
+
+        //check every particle within the block's space
+        for (int px = 0; px < particlesPerEdge; px++) {
+          for (int py = 0; py < particlesPerEdge; py++) {
+            Particle particle = particleGrid[x * particlesPerEdge + px][y * particlesPerEdge + py];
+            if (!particle.type.equals("Air")) {
+              active = true;
+              numParticles++;
+            }
+          }
+        }
+
+        blocks[x][y].active = active;
+        blocks[x][y].full = numParticles > particlesPerBlock / 2.0;
+      }
+    }
+  }
+
+  //picks a random type from the list, removes it from the list, and returns it
+  public String pickType() {
+    if (types.size() == 0) {
+      fillTypes();
+    }
+
+    int index = int(random(0, types.size()));
+    String type = types.get(index);
+    types.remove(index);
+    return type;
+  }
+
+  //map the types to their respective colors
+  void fillTypeColors() {
+    typeColors.put("Air", new Color(0, 0, 0, 0));
+    typeColors.put("Fire", new Color(235, 64, 52));
+    typeColors.put("Water", new Color(66, 135, 245));
+    typeColors.put("Plant", new Color(50, 168, 82));
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -101,22 +190,15 @@ public class Grid {
 
   //checks for any full rows, clears them, and moves everything downward
   void checkRows() {
-
-    //used to track how many rows are cleared (sent into lower rows)
-    int numCleared = 0;
-
     //check every row
     for (int y = 0; y < gridHeight; y++) {
 
       //check if the row is full
       boolean full = true;
       for (int x = 0; x < gridWidth; x++) {
-        //if any block in the row is not active then the row is not full
-        if (!blocks[x][y].active) {
+        //if any block in the row is not full then the row is not full
+        if (!blocks[x][y].full) {
           full = false;
-
-          //stop checking the row
-          x = gridWidth;
         }
       }
 
@@ -124,60 +206,41 @@ public class Grid {
       if (full) {
         //clear it
         clearRow(y);
+      }
+    }
+  }
 
-        //track how many rows were cleared
-        numCleared++;
+  //clear the row at the given row
+  void clearRow(int row) {
+    //clear the row
+    for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
+      for (int py = row * particlesPerEdge; py < row * particlesPerEdge + particlesPerEdge; py++) {
+        particleList.remove(particleGrid[px][py]);
+        particleGrid[px][py] = new Particle("Air", px, py);
       }
     }
 
-    //lower all the rows as needed
-    lowerRows(numCleared);
-  }
+    //lower any rows above the newly cleared row
 
-  //clear the row at the given y rank
-  void clearRow(int y) {
-    for (int x = 0; x < gridWidth; x++) {
-      blocks[x][y].active = false;
-    }
-  }
+    //bottom up means that empty rows move upward until they are gone
+    //does not bother with row 0 because there is nothing to lower into that row
+    for (int y = row; y > 0; y--) {
 
-  //lowers everything into numEmpty empty rows
-  void lowerRows(int numEmpty) {
+      //copy the above row into this row and clear the above row
+      for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
+        for (int py = y * particlesPerEdge; py < y * particlesPerEdge + particlesPerEdge; py++) {
+          //copy above row to lower
+          particleGrid[px][py] = particleGrid[px][py - particlesPerEdge];
+          particleGrid[px][py].y += blockWidth;
 
-    //loop numEmpty times
-    for (int lcv = 0; lcv < numEmpty; lcv++) {
-
-      //bottom up means that empty rows move upward until they are gone
-      //does not bother with row 0 because there is nothing to lower into that row
-      for (int y = gridHeight - 1; y > 0; y--) {
-
-        //check if the row is empty
-        boolean empty = true;
-        for (int x = 0; x < gridWidth; x++) {
-
-          //if a block in the row is active, then the row is not empty.
-          if (blocks[x][y].active) {
-
-            empty = false;
-
-            //stop checking the row for emptiness
-            x = gridWidth;
-          }
-        }
-
-        //if the row is empty
-        if (empty) {
-
-          //copy the above row into this row and clear the above row
-          for (int x = 0; x < gridWidth; x++) {
-            blocks[x][y].active = blocks[x][y - 1].active;
-            blocks[x][y - 1].active = false;
-            blocks[x][y].setColour(blocks[x][y - 1].colour);
-          }
+          //clear above row
+          particleGrid[px][py - particlesPerEdge] = new Particle("Air", px, py - particlesPerEdge);
         }
       }
     }
   }
+
+
 
   //attempts to hold the current piece - cannot swap if the piece was just swapped out
   void hold() {
@@ -244,76 +307,31 @@ public class Grid {
 
     //draw the ghost block if enabled
     if (ghostBlock) {
-      //duplicate the tetromino
-      Tetromino ghost = new Tetromino(tetromino.shape, tetromino.rotation);      
-      ghost.setColour(tetromino.colour);
-      ghost.offsetX = tetromino.offsetX;
-      ghost.offsetY = tetromino.offsetY;
+      //duplicate the tetromino, but decrease the alpha
+      Tetromino ghost = new Tetromino(tetromino);
+      ghost.colour.a = 127;
 
       //slam the duplicate but don't place it
       ghost.slam(false);
 
-      //change the ghost's colors somehow
-      alpha = 127;
-
       //render the ghost
       ghost.render();
+    }
 
-      //set alpha back
-      alpha = 255;
-
-      //int offsetX = tetromino.offsetX;
-      //int offsetY = tetromino.offsetY;
-
-      //int leftX = 5;
-      //int rightX = -5;
-
-      //for (int lcv = 0; lcv < 4; lcv++) {
-      //  int someX = tetromino.blocks[lcv].x;
-      //  if (someX < leftX) {
-      //    leftX = someX;
-      //  }
-      //  if (someX > rightX) {
-      //    rightX = someX;
-      //  }
-      //}
-
-      //int leftY = -5;
-      //int rightY = -5;
-      //for (int lcv = 0; lcv < 4; lcv++) {
-      //  int someX = tetromino.blocks[lcv].x;
-      //  int someY = tetromino.blocks[lcv].y;
-      //  if (someX == leftX && someY > leftY) {
-      //    leftY = someY;
-      //  }
-      //  if (someX == rightX && someY > rightY) {
-      //    rightY = someY;
-      //  }
-      //}
-
-      //int leftFloorY = gridHeight;
-      //int rightFloorY = gridHeight;
-      //for (int lcv = 0; lcv < gridHeight; lcv++) {
-      //  Block leftBlock = blocks[leftX + offsetX][lcv];
-      //  Block rightBlock = blocks[rightX + offsetX][lcv];
-
-      //  if (leftBlock.active && leftBlock.y < leftFloorY) {
-      //    leftFloorY = leftBlock.y;
-      //  }
-      //  if (rightBlock.active && rightBlock.y < rightFloorY) {
-      //    rightFloorY = rightBlock.y;
-      //  }
-      //}
-
-      //stroke(255, 220, 122);
-      //pushMatrix();
-      //translate(cornerX, cornerY);
-      //println("offset:", offsetX, offsetY);
-      //println(leftX, leftY, rightX, rightY);
-      //line((leftX + offsetX) * blockWidth, (leftY + offsetY + 1) * blockWidth, (leftX + offsetX) * blockWidth, leftFloorY * blockWidth); 
-      //line((rightX + offsetX + 1) * blockWidth, (rightY + offsetY + 1) * blockWidth, (rightX + offsetX + 1) * blockWidth, rightFloorY * blockWidth); 
-      //popMatrix();
-      //stroke(0, 0, 0);
+    //render the particles
+    //for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
+    //  for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
+    //    Particle particle = grid.particleGrid[x][y];
+    //    if (particle != null) {
+    //      fill(particle.colour);
+    //      rect(x * particleWidth + cornerX, y * particleWidth + cornerY, particleWidth, particleWidth);
+    //    }
+    //  }
+    //}
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      Particle particle = particleList.get(lcv);
+      fill(particle.colour);
+      rect(particle.x, particle.y, particleWidth, particleWidth);
     }
 
     //draw grid border
@@ -369,7 +387,7 @@ public class Grid {
 
       //draw the blocks around the center of the held box
       for (int lcv = 0; lcv < 4; lcv++) {
-        fill(50, 168, 82);
+        fill(held.colour);
         rect(centerX + (xOffset + held.blocks[lcv].x) * blockWidth - blockWidth / 2.0, centerY + (yOffset + held.blocks[lcv].y) * blockWidth - blockWidth / 2.0, blockWidth, blockWidth);
       }
     }
@@ -422,7 +440,7 @@ public class Grid {
 
       //draw the blocks around the center of the held box
       for (int lcv = 0; lcv < 4; lcv++) {
-        fill(229, 52, 235);
+        fill(queued.blocks[lcv].colour);
         rect(centerX + (xOffset + queued.blocks[lcv].x) * blockWidth - blockWidth / 2.0, centerY + (yOffset + queued.blocks[lcv].y) * blockWidth - blockWidth / 2.0, blockWidth, blockWidth);
       }
     }
