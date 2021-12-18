@@ -48,9 +48,9 @@ public class Particle {
   }
 
   public void setType(String type) {
-    if (this.type.equals("Air")) {
-      grid.particleList.remove(this);
-    }
+    //if (this.type.equals("Air")) {
+    //  grid.particleList.remove(this);
+    //}
     //wake neighbors
     ArrayList<Particle> neighbors = halfAdjacents();
     for (int lcv = 0; lcv < neighbors.size(); lcv++) {
@@ -63,9 +63,9 @@ public class Particle {
     this.type = type;
     this.colour = grid.colorMap.get(type).copy();
     //resetVariables();
-    if (!this.type.equals("Air")) {
-      grid.particleList.add(this);
-    }
+    //if (!this.type.equals("Air")) {
+    //  grid.particleList.add(this);
+    //}
   }
 
   public void resetVariables() {

@@ -34,9 +34,9 @@ public class Block {
       fill(255, 255, 255, 127);
       rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
     }
-    if (false) {
-      noFill();
-      rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
-    }
+    //if (false) {
+    //  noFill();
+    //  rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
+    //}
   }
 }

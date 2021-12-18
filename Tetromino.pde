@@ -249,13 +249,13 @@ public class Tetromino {
           int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY + particleOffset);
 
           grid.particleGrid[xIndex][yIndex].setType(type); 
-          grid.particleList.add(grid.particleGrid[xIndex][yIndex]);
+          //grid.particleList.add(grid.particleGrid[xIndex][yIndex]);
         }
       }
     }
 
     grid.updateBlockStats();
-    shuffleParticles();
+    //shuffleParticles();
   }
 
   public void setType(String type) {
