@@ -37,6 +37,10 @@ Grid grid;
 Block templates[][][] = new Block[7][4][4];
 
 boolean debug = true;
+boolean checkingRows = true;
+boolean alphaSleep = false;
+boolean autoParticle = true;
+boolean autoFall = true;
 
 boolean lost;
 
@@ -44,7 +48,10 @@ long lastTime = System.nanoTime();
 double amountOfTicks = 30.0;
 double ns = 1000000000 / amountOfTicks;
 double delta = 0;
-long timer = System.currentTimeMillis();
+long timer = System.currentTimeMillis(); 
+
+ArrayList<String> allTypes;
+
 
 void setup() {
   size(900, 800);
@@ -53,6 +60,11 @@ void setup() {
 
   //fill the template array with all piece shapes and rotations
   fillTemplates();
+
+  allTypes = new ArrayList<String>();
+  allTypes.add("Fire");
+  allTypes.add("Water");
+  allTypes.add("Plant");
 
   //build the grid
   grid = new Grid();
@@ -77,7 +89,9 @@ void draw() {
   lastTime = now;
   while (delta >= 1)
   {
-    grid.updateParticles();
+    if (autoParticle) {
+      grid.updateParticles();
+    }
     delta--;
   }
   long currTime = System.currentTimeMillis();
@@ -91,7 +105,9 @@ void draw() {
   if (!lost && currTime - oldDropTime >= blockTime) {
     oldDropTime = currTime;
 
-    grid.tetromino.down();
+    if (autoFall) {
+      grid.tetromino.down();
+    }
   }
 
   background(60, 60, 60);
@@ -118,8 +134,36 @@ void keyPressed() {
   }
   //\ advances to next shape (if debug mode is enabled)
   if (debug && key == '\\') {
-    grid.tetromino.setType(grid.pickType());
+    int index = allTypes.indexOf(grid.tetromino.type);
+    grid.tetromino.setType(allTypes.get((index + 1) % allTypes.size()));
     grid.tetromino.copyTemplate();
+  }
+
+  //d toggles whether rows clear (if debug mode is enabled)
+  if (debug && key == 'd' || key == 'D') {
+    checkingRows = !checkingRows;
+    println("toggled rowCheck", checkingRows);
+  }
+  //f toggles whether blocks fall automatically (if debug mode is enabled)
+  if (debug && key == 'f' || key == 'F') {
+    autoFall = !autoFall;
+    println("toggled autoFall", autoFall);
+  }
+
+  //x toggles whether particles update automatically (if debug mode is enabled)
+  if (debug && key == 'x' || key == 'X') {
+    autoParticle = !autoParticle;
+    println("toggled autoParticle", autoParticle);
+  }
+  //z manually updates all the particles one tick, only if autoParticle is off (if debug mode is enabled)
+  if (debug && key == 'z' || key == 'Z' && !autoParticle) {
+    grid.updateParticles();
+    println("forced a particle update");
+  }
+  //a toggles whether sleeping particles half reduced alpha (if debug mode is enabled)
+  if (debug && key == 'a' || key == 'A') {
+    alphaSleep = !alphaSleep;
+    println("toggled alphaSleep", alphaSleep);
   }
 
   //space slams

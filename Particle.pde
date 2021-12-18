@@ -22,6 +22,9 @@ public class Particle {
 
   public boolean fresh;
 
+
+  public boolean moved;
+  public boolean interacted;
   public boolean awake;
 
   public Particle(String type, int xIndex, int yIndex) {
@@ -34,7 +37,7 @@ public class Particle {
     this.type = type;
     this.colour = grid.colorMap.get(type).copy();
 
-    resetVariables();
+    //resetVariables();
     fresh = false;
     awake = true;
   }
@@ -44,54 +47,63 @@ public class Particle {
   }
 
   public void wake() {
+    moved = true;
+    interacted = true;
     awake = true;
   }
 
   public void setType(String type) {
-    if (this.type.equals("Air")) {
-      grid.particleList.remove(this);
-    }
+    //wake self
+    wake();
+    
     //wake neighbors
     ArrayList<Particle> neighbors = halfAdjacents();
     for (int lcv = 0; lcv < neighbors.size(); lcv++) {
       neighbors.get(lcv).wake();
     }
-    //fresh fire gets more ? fuel than standard plant
+    
+    //fuel any new fire
     if ((this.type.equals("Air") || this.type.equals("Plant")) && type.equals("Fire")) {
       fuel = baseFuel;
     } 
+    
+    //set the type
     this.type = type;
     this.colour = grid.colorMap.get(type).copy();
-    //resetVariables();
-    if (!this.type.equals("Air")) {
-      grid.particleList.add(this);
-    }
   }
 
-  public void resetVariables() {
-    //reset fire
-    if (type.equals("Fire")) {
-      if (fuel <= 0) {
-        fuel = baseFuel / 2;
-      }
-    } 
-    //reset plant
-    else if (type.equals("Plant")) {
-      fuel = baseFuel;
-    }
-  }
+  //public void resetVariables() {
+  //  //reset fire
+  //  if (type.equals("Fire")) {
+  //    if (fuel <= 0) {
+  //      fuel = baseFuel / 2;
+  //    }
+  //  } 
+  //  //reset plant
+  //  else if (type.equals("Plant")) {
+  //    fuel = baseFuel;
+  //  }
+  //}
 
   public void render() {
     if (!type.equals("Air")) {
+      //Color test = colour.copy();
+      //if (!awake && alphaSleep) {
+      //  test.a /= 2;
+      //}
       fill(colour);
+      if (!awake && alphaSleep) {
+        strokeWeight(0);
+      }
       rect(x, y, particleWidth, particleWidth);
+      strokeWeight(1);
     }
   }
 
   public void move() {
     if (awake) {
       //tracks whether or not the particle moved
-      boolean moved = false;
+      moved = false;
 
       //move water
       if (type.equals("Water")) {
@@ -141,6 +153,8 @@ public class Particle {
 
           moved = true;
         }
+        
+        println(moved, this);
       } 
       //move fire
       else if (type.equals("Fire")) {
@@ -156,10 +170,6 @@ public class Particle {
       //println(type, colour);
       if ((type.equals("Fire") && !colour.equals(grid.colorMap.get("Fire"))) || (type.equals("Fire") && !colour.equals(grid.colorMap.get("Fire")))) {
         println("if this ever happens then somethings gone very wrong");
-      }
-
-      if (!moved) {
-        sleep();
       }
     }
   }
@@ -254,7 +264,7 @@ public class Particle {
   public void interact() {
     if (awake) {
       //track whether or not the particle interacts with anything. 
-      boolean interacted = false;
+      interacted = false;
 
       ArrayList<Particle> halfAdjacents = halfAdjacents();
       ArrayList<Particle> fullAdjacents = fullAdjacents();
@@ -305,7 +315,6 @@ public class Particle {
 
                     //set to fresh to prevent fire from chaining into a million burns in one step
                     adj.fresh = true;
-                    ;
                   }
                 }
               }
@@ -343,6 +352,10 @@ public class Particle {
             }
           }
         }
+
+        if (!interacted && !moved) {
+          sleep();
+        }
       }
     }
   }
@@ -377,5 +390,10 @@ public class Particle {
       return grid.particleGrid[xIndex][yIndex + 1];
     }
     return null;
+  }
+
+  //makes printing particles nicer
+  public String toString() {
+    return ("[" + xIndex + ", " + yIndex + ", " + type + ", " + awake + "]");
   }
 }

@@ -81,8 +81,10 @@ public class Grid {
     for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
       for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
         particleGrid[x][y] = new Particle("Air", x, y);
+        particleList.add(particleGrid[x][y]);
       }
     }
+    shuffleParticles();
   }
 
   //refills the shapes list with all shape options
@@ -106,14 +108,14 @@ public class Grid {
 
   //fill the particle types
   void fillTypes() {
-    types.add("Fire");
-    types.add("Water");
-    types.add("Plant");
+    for (int lcv = 0; lcv < allTypes.size(); lcv++) {
+     types.add(allTypes.get(lcv)); 
+    }
   }
 
   //updates all the particles, then updates which blocks in the grid are active/full
   public void updateParticles() {
-
+    int numAwake = 0;
     //update each particle's location
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).move();
@@ -121,7 +123,11 @@ public class Grid {
     //have all the particles interact
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).interact();
+      if (particleList.get(lcv).awake) {
+        numAwake++;
+      }
     }
+    println(numAwake, "are awake");
     updateBlockStats();
     grid.checkRows();
   }
@@ -193,22 +199,24 @@ public class Grid {
 
   //checks for any full rows, clears them, and moves everything downward
   void checkRows() {
-    //check every row
-    for (int y = 0; y < gridHeight; y++) {
+    if (checkingRows) {
+      //check every row
+      for (int y = 0; y < gridHeight; y++) {
 
-      //check if the row is full
-      boolean full = true;
-      for (int x = 0; x < gridWidth; x++) {
-        //if any block in the row is not full then the row is not full
-        if (!blocks[x][y].full) {
-          full = false;
+        //check if the row is full
+        boolean full = true;
+        for (int x = 0; x < gridWidth; x++) {
+          //if any block in the row is not full then the row is not full
+          if (!blocks[x][y].full) {
+            full = false;
+          }
         }
-      }
 
-      //if the row is full
-      if (full) {
-        //clear it
-        clearRow(y);
+        //if the row is full
+        if (full) {
+          //clear it
+          clearRow(y);
+        }
       }
     }
   }
@@ -221,7 +229,7 @@ public class Grid {
         particleGrid[px][py].setType("Air");
       }
     }
-    
+
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -234,13 +242,13 @@ public class Grid {
           //copy above row to lower
           Particle above = particleGrid[px][py - particlesPerEdge];
           Particle curr = particleGrid[px][py];
-          
+
           String aboveType = above.type;
           int aboveFuel = above.fuel;
-          
+
           above.setType(curr.type);
           above.fuel = curr.fuel;
-          
+
           curr.setType(aboveType);
           curr.fuel = aboveFuel;
         }
@@ -321,7 +329,7 @@ public class Grid {
 
       //slam the duplicate but don't place it
       ghost.slam(false);
-      
+
       //particle slam the duplicate as well
       ghost.particleSlam();
 
@@ -339,13 +347,12 @@ public class Grid {
     //    }
     //  }
     //}
-    println(particleList.size());
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).render();
       //if (particleList.get(lcv).type.equals("Air")) {
       // particleList.remove(lcv);
       //}
-      
+
       //Particle particle = particleList.get(lcv);
       //fill(particle.colour);
       //rect(particle.x, particle.y, particleWidth, particleWidth);
