@@ -321,6 +321,9 @@ public class Grid {
 
       //slam the duplicate but don't place it
       ghost.slam(false);
+      
+      //particle slam the duplicate as well
+      ghost.particleSlam();
 
       //render the ghost
       ghost.render();

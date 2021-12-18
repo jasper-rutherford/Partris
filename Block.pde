@@ -24,12 +24,12 @@ public class Block {
 
   public void render()
   {
-    if (active) {
-      noFill();
-    strokeWeight(2);
-      rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
-    strokeWeight(1);
-    }
+    //if (active) {
+    //  noFill();
+    //strokeWeight(2);
+    //  rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
+    //strokeWeight(1);
+    //}
     if (full) {
       fill(255, 255, 255, 127);
       rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);

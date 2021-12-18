@@ -18,8 +18,9 @@ public class Tetromino {
   //the x,y coords of the central block of the piece
   public int offsetX;
   public int offsetY;
-  
-  
+
+  //vertical offset (number of particle rows)
+  public int particleOffset;
 
   //creates a tetromino with a random shape and rotation
   public Tetromino() {
@@ -57,6 +58,8 @@ public class Tetromino {
     offsetX = tetromino.offsetX;
     offsetY = tetromino.offsetY;
 
+    particleOffset = tetromino.particleOffset;
+
     if (collision(0, 0)) {
       lose();
     }
@@ -91,6 +94,8 @@ public class Tetromino {
     }
     offsetY *= -1;
 
+    particleOffset = 0;
+
     if (collision(0, 0)) {
       lose();
     }
@@ -123,10 +128,13 @@ public class Tetromino {
     }
     //if there would be a collision
     else {
+      //particleSlam the tetromino
+      particleSlam();
+
       //put the block on the grid and create a new tetromino
       place();
       grid.checkRows();
-      
+
       //get the next tetromino
       grid.newTetromino();
     }
@@ -151,6 +159,7 @@ public class Tetromino {
 
     //if place is true
     if (place) {
+      particleSlam();
       //put the block on the grid and create a new tetromino
       place();
       grid.checkRows();
@@ -159,10 +168,23 @@ public class Tetromino {
       grid.newTetromino();
     }
   }
-  
+
   //move the tetromino down as many particle rows as it can without hitting any particles
   public void particleSlam() {
-    
+    //drop tetromino as many particle rows as it will go
+    boolean slamming = true;
+    while (slamming) {
+      //if a downward movement wouldn't collide with anything
+      if (!particleCollision(1))
+      {
+        //move the block down one row
+        particleOffset++;
+      }
+      //otherwise the block has descended as far as it will go
+      else {
+        slamming = false;
+      }
+    }
   }
 
   public void rotateLeft() {
@@ -224,7 +246,7 @@ public class Tetromino {
       for (int particleX = 0; particleX < particlesPerEdge; particleX++) {
         for (int particleY = 0; particleY < particlesPerEdge; particleY++) {
           int xIndex = int((block.x + offsetX) * particlesPerEdge + particleX);
-          int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY);
+          int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY + particleOffset);
 
           grid.particleGrid[xIndex][yIndex].setType(type); 
           grid.particleList.add(grid.particleGrid[xIndex][yIndex]);
@@ -235,10 +257,10 @@ public class Tetromino {
     grid.updateBlockStats();
     shuffleParticles();
   }
-  
+
   public void setType(String type) {
-   this.type = type;
-   this.colour = grid.colorMap.get(type).copy();
+    this.type = type;
+    this.colour = grid.colorMap.get(type).copy();
   }
 
   //checks if the tetromino would collide with anything if it moved according to the given x, y
@@ -264,6 +286,35 @@ public class Tetromino {
     return out;
   }
 
+  //checks if the tetromino would collide with anything if it moved according to the given y
+  boolean particleCollision(int y) {
+    boolean out = false;
+
+    //check all blocks in the tetromino
+    for (int lcv = 0; lcv < 4; lcv++) {
+      Block block = blocks[lcv];
+      int blockCornerX = (block.x + offsetX) * particlesPerEdge;
+      int blockCornerY = (block.y + offsetY) * particlesPerEdge + particleOffset + y;
+
+      for (int relX = 0; relX < particlesPerEdge; relX++) {
+        for (int relY = 0; relY < particlesPerEdge; relY++) {
+          //checks for if the given block is outside the particle grid
+          int netX = blockCornerX + relX;
+          int netY = blockCornerY + relY;
+          if (netX < 0 || netY < 0 || netX >= gridWidth * particlesPerEdge || netY >= gridHeight * particlesPerEdge) {
+            out = true;
+          }
+          // or inside the grid but overlapping another block
+          else if (netX >= 0 && netY >= 0 && netX < gridWidth * particlesPerEdge && netY < gridHeight * particlesPerEdge && !grid.particleGrid[netX][netY].type.equals("Air")) {
+            out = true;
+          }
+        }
+      }
+    }
+
+    return out;
+  }
+
   //copies relevant blocks from template
   void copyTemplate() {
     for (int lcv = 0; lcv < 4; lcv++) {
@@ -277,7 +328,7 @@ public class Tetromino {
     fill(colour);
     for (int lcv = 0; lcv < 4; lcv++) {
       Block block = blocks[lcv];
-      rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth, blockWidth, blockWidth);
+      rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth + particleOffset * particleWidth, blockWidth, blockWidth);
     }
   }
 }
