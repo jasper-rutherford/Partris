@@ -18,6 +18,8 @@ public class Tetromino {
   //the x,y coords of the central block of the piece
   public int offsetX;
   public int offsetY;
+  
+  
 
   //creates a tetromino with a random shape and rotation
   public Tetromino() {
@@ -71,7 +73,7 @@ public class Tetromino {
     this.type = type;
 
     //set colour according to particle type
-    colour = grid.typeColors.get(type).copy();
+    colour = grid.colorMap.get(type).copy();
 
     //copy in relevant blocks from the template
     copyTemplate();
@@ -124,7 +126,7 @@ public class Tetromino {
       //put the block on the grid and create a new tetromino
       place();
       grid.checkRows();
-
+      
       //get the next tetromino
       grid.newTetromino();
     }
@@ -156,6 +158,11 @@ public class Tetromino {
       //get the next tetromino
       grid.newTetromino();
     }
+  }
+  
+  //move the tetromino down as many particle rows as it can without hitting any particles
+  public void particleSlam() {
+    
   }
 
   public void rotateLeft() {
@@ -219,9 +226,8 @@ public class Tetromino {
           int xIndex = int((block.x + offsetX) * particlesPerEdge + particleX);
           int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY);
 
-          Particle particle = new Particle(type, xIndex, yIndex);
-          grid.particleGrid[xIndex][yIndex] = particle; 
-          grid.particleList.add(particle);
+          grid.particleGrid[xIndex][yIndex].setType(type); 
+          grid.particleList.add(grid.particleGrid[xIndex][yIndex]);
         }
       }
     }
@@ -232,7 +238,7 @@ public class Tetromino {
   
   public void setType(String type) {
    this.type = type;
-   this.colour = grid.typeColors.get(type).copy();
+   this.colour = grid.colorMap.get(type).copy();
   }
 
   //checks if the tetromino would collide with anything if it moved according to the given x, y

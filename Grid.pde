@@ -35,7 +35,7 @@ public class Grid {
 
   public ArrayList<Integer> shapes;
   public ArrayList<String> types;
-  public HashMap<String, Color> typeColors;
+  public HashMap<String, Color> colorMap;
 
   public ArrayList<Particle> particleList;
 
@@ -49,7 +49,7 @@ public class Grid {
     //calculate coords of top left corner of grid
     cornerX = (width - totWidth) / 2;
     cornerY = (height - totHeight) / 2;
-    
+
     //swapped defaults to false
     swapped = false;
 
@@ -58,7 +58,7 @@ public class Grid {
 
     shapes = new ArrayList<Integer>();
     types = new ArrayList<String>();
-    typeColors = new HashMap<String, Color>();
+    colorMap = new HashMap<String, Color>();
     fillShapes();
     fillTypes();
     fillTypeColors();
@@ -113,7 +113,7 @@ public class Grid {
 
   //updates all the particles, then updates which blocks in the grid are active/full
   public void updateParticles() {
-    
+
     //update each particle's location
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).move();
@@ -123,9 +123,12 @@ public class Grid {
       particleList.get(lcv).interact();
     }
     updateBlockStats();
+    grid.checkRows();
   }
 
   //updates which blocks in the grid are active/full
+  //a block is active if it is not 100% full of air
+  //a block is full if more than half of its particles are not air
   public void updateBlockStats() {
     //updates every block's activity and fullness in the grid
     for (int x = 0; x < gridWidth; x++) {
@@ -167,10 +170,10 @@ public class Grid {
 
   //map the types to their respective colors
   void fillTypeColors() {
-    typeColors.put("Air", new Color(0, 0, 0, 0));
-    typeColors.put("Fire", new Color(235, 64, 52));
-    typeColors.put("Water", new Color(66, 135, 245));
-    typeColors.put("Plant", new Color(50, 168, 82));
+    colorMap.put("Air", new Color(0, 0, 0, 0));
+    colorMap.put("Fire", new Color(235, 64, 52));
+    colorMap.put("Water", new Color(66, 135, 245));
+    colorMap.put("Plant", new Color(50, 168, 82));
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -215,11 +218,10 @@ public class Grid {
     //clear the row
     for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
       for (int py = row * particlesPerEdge; py < row * particlesPerEdge + particlesPerEdge; py++) {
-        particleList.remove(particleGrid[px][py]);
-        particleGrid[px][py] = new Particle("Air", px, py);
+        particleGrid[px][py].setType("Air");
       }
     }
-
+    
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -230,11 +232,17 @@ public class Grid {
       for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
         for (int py = y * particlesPerEdge; py < y * particlesPerEdge + particlesPerEdge; py++) {
           //copy above row to lower
-          particleGrid[px][py] = particleGrid[px][py - particlesPerEdge];
-          particleGrid[px][py].y += blockWidth;
-
-          //clear above row
-          particleGrid[px][py - particlesPerEdge] = new Particle("Air", px, py - particlesPerEdge);
+          Particle above = particleGrid[px][py - particlesPerEdge];
+          Particle curr = particleGrid[px][py];
+          
+          String aboveType = above.type;
+          int aboveFuel = above.fuel;
+          
+          above.setType(curr.type);
+          above.fuel = curr.fuel;
+          
+          curr.setType(aboveType);
+          curr.fuel = aboveFuel;
         }
       }
     }
@@ -329,9 +337,10 @@ public class Grid {
     //  }
     //}
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
-      Particle particle = particleList.get(lcv);
-      fill(particle.colour);
-      rect(particle.x, particle.y, particleWidth, particleWidth);
+      particleList.get(lcv).render();
+      //Particle particle = particleList.get(lcv);
+      //fill(particle.colour);
+      //rect(particle.x, particle.y, particleWidth, particleWidth);
     }
 
     //draw grid border

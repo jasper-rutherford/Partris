@@ -23,13 +23,14 @@ int particlesPerBlock = particlesPerEdge * particlesPerEdge;
 float particleWidth = int(blockWidth / particlesPerEdge);
 
 //how long in milliseconds that a block takes to fall one row
-float droptime = 1000;
+float blockTime = 1000;
+float particleTime = 333;
 
 long oldDropTime;
 long oldParticleTime;
 int particleUpdate;
 
-int fuel = 5;
+int baseFuel = 500;
 
 Grid grid;
 
@@ -39,8 +40,15 @@ boolean debug = true;
 
 boolean lost;
 
+long lastTime = System.nanoTime();
+double amountOfTicks = 30.0;
+double ns = 1000000000 / amountOfTicks;
+double delta = 0;
+long timer = System.currentTimeMillis();
+
 void setup() {
   size(900, 800);
+  surface.setTitle("Partris");
   lost = false;
 
   //fill the template array with all piece shapes and rotations
@@ -57,22 +65,30 @@ void setup() {
 }
 
 void lose() {
-  lost = true;
-  System.out.println("lost");
+  if (!lost) {
+    lost = true;
+    System.out.println("lost");
+  }
 }
 
 void draw() {
+  long now = System.nanoTime();
+  delta += (now - lastTime) / ns;
+  lastTime = now;
+  while (delta >= 1)
+  {
+    grid.updateParticles();
+    delta--;
+  }
   long currTime = System.currentTimeMillis();
 
-  particleUpdate++;
-  if (particleUpdate == 20) {
-    //update the particles as fast as they can (probably around 60 times a second?) TODO fix this comment
-    grid.updateParticles();
-    particleUpdate = 0;
-  }
+  //if (!lost && currTime - oldDropTime >= particleTime) {
+  //  //update the particles roughly the same amount of times per second
+  //  grid.updateParticles();
+  //}
 
   //lower the block once a second (TODO: make this speed up over time)
-  if (!lost && currTime - oldDropTime >= droptime) {
+  if (!lost && currTime - oldDropTime >= blockTime) {
     oldDropTime = currTime;
 
     grid.tetromino.down();
