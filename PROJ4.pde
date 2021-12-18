@@ -155,17 +155,17 @@ void fill(Color colour) {
 }
 
 //randomizes the order of all the particles in the particleList
-//void shuffleParticles() {
-//  ArrayList<Particle> pList = grid.particleList;
-//  ArrayList<Particle> temp = new ArrayList<Particle>();
-//  int size = pList.size();
-//  for (int lcv = 0; lcv < size; lcv++) {
-//    int index = int(random(0, pList.size()));
-//    temp.add(pList.get(index));
-//    pList.remove(index);
-//  }
-//  grid.particleList = temp;
-//}
+void shuffleParticles() {
+  ArrayList<Particle> pList = grid.particleList;
+  ArrayList<Particle> temp = new ArrayList<Particle>();
+  int size = pList.size();
+  for (int lcv = 0; lcv < size; lcv++) {
+    int index = int(random(0, pList.size()));
+    temp.add(pList.get(index));
+    pList.remove(index);
+  }
+  grid.particleList = temp;
+}
 
 
 /*

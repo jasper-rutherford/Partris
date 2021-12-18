@@ -37,6 +37,8 @@ public class Grid {
   public ArrayList<String> types;
   public HashMap<String, Color> colorMap;
 
+  public ArrayList<Particle> particleList;
+
   //default constructor
   public Grid() {
 
@@ -73,6 +75,7 @@ public class Grid {
   public void setupParticleStuff() {
     //initialize the particleGrid and particleList
     particleGrid = new Particle[gridWidth * particlesPerEdge][gridHeight * particlesPerEdge];
+    particleList = new ArrayList<Particle>();
 
     //all particles default to air
     for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
@@ -112,16 +115,12 @@ public class Grid {
   public void updateParticles() {
 
     //update each particle's location
-    for (int px = 0; px < particleGrid.length; px++) {
-      for (int py = 0; py < particleGrid[0].length; py++) {
-        particleGrid[px][py].move();
-      }
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      particleList.get(lcv).move();
     }
     //have all the particles interact
-    for (int px = 0; px < grid.particleGrid.length; px++) {
-      for (int py = 0; py < grid.particleGrid[0].length; py++) {
-        particleGrid[px][py].interact();
-      }
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      particleList.get(lcv).interact();
     }
     updateBlockStats();
     grid.checkRows();
@@ -222,7 +221,7 @@ public class Grid {
         particleGrid[px][py].setType("Air");
       }
     }
-
+    
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -235,13 +234,13 @@ public class Grid {
           //copy above row to lower
           Particle above = particleGrid[px][py - particlesPerEdge];
           Particle curr = particleGrid[px][py];
-
+          
           String aboveType = above.type;
           int aboveFuel = above.fuel;
-
+          
           above.setType(curr.type);
           above.fuel = curr.fuel;
-
+          
           curr.setType(aboveType);
           curr.fuel = aboveFuel;
         }
@@ -322,7 +321,7 @@ public class Grid {
 
       //slam the duplicate but don't place it
       ghost.slam(false);
-
+      
       //particle slam the duplicate as well
       ghost.particleSlam();
 
@@ -331,14 +330,25 @@ public class Grid {
     }
 
     //render the particles
-    for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
-      for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
-        Particle particle = grid.particleGrid[x][y];
-        if (particle != null) {
-          fill(particle.colour);
-          rect(x * particleWidth + cornerX, y * particleWidth + cornerY, particleWidth, particleWidth);
-        }
-      }
+    //for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
+    //  for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
+    //    Particle particle = grid.particleGrid[x][y];
+    //    if (particle != null) {
+    //      fill(particle.colour);
+    //      rect(x * particleWidth + cornerX, y * particleWidth + cornerY, particleWidth, particleWidth);
+    //    }
+    //  }
+    //}
+    println(particleList.size());
+    for (int lcv = 0; lcv < particleList.size(); lcv++) {
+      particleList.get(lcv).render();
+      //if (particleList.get(lcv).type.equals("Air")) {
+      // particleList.remove(lcv);
+      //}
+      
+      //Particle particle = particleList.get(lcv);
+      //fill(particle.colour);
+      //rect(particle.x, particle.y, particleWidth, particleWidth);
     }
 
     //draw grid border
