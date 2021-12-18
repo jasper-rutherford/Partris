@@ -339,8 +339,13 @@ public class Grid {
     //    }
     //  }
     //}
+    println(particleList.size());
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).render();
+      //if (particleList.get(lcv).type.equals("Air")) {
+      // particleList.remove(lcv);
+      //}
+      
       //Particle particle = particleList.get(lcv);
       //fill(particle.colour);
       //rect(particle.x, particle.y, particleWidth, particleWidth);
