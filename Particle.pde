@@ -17,6 +17,7 @@ public class Particle {
 
   public String type;
   public Color colour;
+  public String prevType;
 
   public int fuel;
 
@@ -36,6 +37,7 @@ public class Particle {
 
     this.type = type;
     this.colour = grid.colorMap.get(type).copy();
+    this.prevType = type;
 
     //resetVariables();
     fresh = false;
@@ -53,37 +55,35 @@ public class Particle {
   }
 
   public void setType(String type) {
+    //set the type
+    prevType = this.type;
+    this.type = type;
+    this.colour = grid.colorMap.get(type).copy();
+
     //wake self
     wake();
-    
+
     //wake neighbors
     ArrayList<Particle> neighbors = halfAdjacents();
     for (int lcv = 0; lcv < neighbors.size(); lcv++) {
       neighbors.get(lcv).wake();
     }
-    
+
     //fuel any new fire
-    if ((this.type.equals("Air") || this.type.equals("Plant")) && type.equals("Fire")) {
+    if ((prevType.equals("Air") || prevType.equals("Plant")) && type.equals("Fire")) {
       fuel = baseFuel;
+    } else if (prevType.equals("Char") && type.equals("Fire")) {
+      fuel = baseFuel * 3;
     } 
     
-    //set the type
-    this.type = type;
-    this.colour = grid.colorMap.get(type).copy();
-  }
+    //if this is a fire that burned out then gain a point
+    if (!lost && prevType.equals("Fire") && type.equals("Air")) {
+      score++;
+      println("Score:", score);
+    }
 
-  //public void resetVariables() {
-  //  //reset fire
-  //  if (type.equals("Fire")) {
-  //    if (fuel <= 0) {
-  //      fuel = baseFuel / 2;
-  //    }
-  //  } 
-  //  //reset plant
-  //  else if (type.equals("Plant")) {
-  //    fuel = baseFuel;
-  //  }
-  //}
+    fresh = true;
+  }
 
   public void render() {
     if (!type.equals("Air")) {
@@ -153,8 +153,6 @@ public class Particle {
 
           moved = true;
         }
-        
-        println(moved, this);
       } 
       //move fire
       else if (type.equals("Fire")) {
@@ -166,8 +164,91 @@ public class Particle {
 
         moved = true;
       }
+      //move stone
+      //move char
+      else if (type.equals("Stone")) {
+        //check the spots (including diagonals) below this particle for openness. 
+        //if any of those spots are open, move to a random one of the spots
+        //then choose a random open spot to move to. if none are found then there is no movement.
+        ArrayList<Particle> openSpaces = new ArrayList<Particle>();
 
-      //println(type, colour);
+        //check lower neighbor particles
+        Particle down = adjacentDown();
+        if (down != null) {
+          Particle downLeft = down.adjacentLeft();
+          Particle downRight = down.adjacentRight();
+          if (down.type.equals("Air") || down.type.equals("Water") || down.type.equals("Lava")) {
+            openSpaces.add(down);
+          }
+          if (downLeft != null && (downLeft.type.equals("Air") || downLeft.type.equals("Water") || downLeft.type.equals("Lava"))) {
+            openSpaces.add(downLeft);
+          }
+          if (downRight != null && (downRight.type.equals("Air") || downRight.type.equals("Water") || downRight.type.equals("Lava"))) {
+            openSpaces.add(downRight);
+          }
+        }
+
+        //pick a random spot from the openSpaces to move to
+        if (openSpaces.size() != 0) {
+          Particle move = openSpaces.get(int(random(0, openSpaces.size())));
+          String movedType = move.type;
+          move.setType(type);
+
+          setType(movedType);
+
+          moved = true;
+        }
+      }
+      //move lava
+      else if (type.equals("Lava")) {
+        //check the spots (including diagonals) below this particle for openness. 
+        //if any of those spots are open, move to a random one of the spots
+        //otherwise, check if the spots directly left or right are open. 
+        //then choose a random open spot to move to. if none are found then there is no movement.
+        ArrayList<Particle> openSpaces = new ArrayList<Particle>();
+
+        //check lower neighbor particles
+        Particle down = adjacentDown();
+        if (down != null) {
+          Particle downLeft = down.adjacentLeft();
+          Particle downRight = down.adjacentRight();
+          if (down.type.equals("Air")) {
+            openSpaces.add(down);
+          }
+          if (downLeft != null && downLeft.type.equals("Air")) {
+            openSpaces.add(downLeft);
+          }
+          if (downRight != null && downRight.type.equals("Air")) {
+            openSpaces.add(downRight);
+          }
+        }
+
+        //only consider direct left and right neighbors if no lower neighbors are available
+        if (openSpaces.size() == 0) {
+          //check left neighbor particle
+          Particle left = adjacentLeft();
+          if (left != null && left.type.equals("Air")) {
+            openSpaces.add(left);
+          }
+
+          //check right neighbor particle
+          Particle right = adjacentRight();
+          if (right != null && right.type.equals("Air")) {
+            openSpaces.add(right);
+          }
+        }
+
+        //pick a random spot from the openSpaces to move to
+        if (openSpaces.size() != 0) {
+          Particle move = openSpaces.get(int(random(0, openSpaces.size())));
+          move.setType("Lava");
+
+          setType("Air");
+
+          moved = true;
+        }
+      }
+
       if ((type.equals("Fire") && !colour.equals(grid.colorMap.get("Fire"))) || (type.equals("Fire") && !colour.equals(grid.colorMap.get("Fire")))) {
         println("if this ever happens then somethings gone very wrong");
       }
@@ -287,9 +368,9 @@ public class Particle {
             }
           }
 
-          //extinguish this fire if it has no air access (set to plant if it has fuel) (which it should? it should never have zero fuel in this section.)
+          //extinguish this fire if it has no air access (set to prevType if it has fuel) (which it should? it should never have zero fuel in this section.)
           if (!hasAir && fuel > 0) {
-            setType("Plant");
+            setType(prevType);
             interacted = true;
           }
           //if the fire has no access to air and it has no fuel
@@ -302,7 +383,7 @@ public class Particle {
             for (int lcv = 0; lcv < halfAdjacents.size(); lcv++) {
               adj = halfAdjacents.get(lcv);
 
-              //if the adjacent particle is plant
+              //interact fire with plant
               if (adj.type.equals("Plant")) {
                 //loop through the plant's half adjacents
                 ArrayList<Particle> plantAdjacents = adj.halfAdjacents();
@@ -312,12 +393,107 @@ public class Particle {
                     //set the plant to be fire
                     adj.setType("Fire");
                     interacted = true;
-
-                    //set to fresh to prevent fire from chaining into a million burns in one step
-                    adj.fresh = true;
                   }
                 }
               }
+              //interact fire with char
+              if (adj.type.equals("Char")) {
+                //loop through the char's half adjacents
+                ArrayList<Particle> charAdjacents = adj.halfAdjacents();
+                for (int charLcv = 0; charLcv < charAdjacents.size(); charLcv++) {
+                  //if the char has any air fully adjacent
+                  if (charAdjacents.get(charLcv).type.equals("Air")) {
+                    //set the char to be fire
+                    adj.setType("Fire");
+                    interacted = true;
+                  }
+                }
+              }
+              //interact fire with ice
+              else if (adj.type.equals("Ice")) {
+                //convert ice to water
+                adj.setType("Water");
+                interacted = true;
+              }
+            }
+          }
+        }
+        //interact water
+        else if (type.equals("Water")) {
+          //check half adjacents
+          for (int lcv = 0; lcv < halfAdjacents.size(); lcv++) {
+            adj = halfAdjacents.get(lcv);
+            if (adj.type.equals("Lava")) {
+              adj.setType("Stone");
+              setType("Stone");
+              interacted = true;
+            }
+          }
+        }
+        //interact lava
+        else if (type.equals("Lava")) {
+          //check half adjacents
+          for (int lcv = 0; lcv < halfAdjacents.size(); lcv++) {
+            adj = halfAdjacents.get(lcv);
+            //interact lava with water
+            if (adj.type.equals("Water")) {
+              adj.setType("Stone");
+              setType("Stone");
+              interacted = true;
+            }
+            //interact lava with plant 
+            else if (adj.type.equals("Plant")) {
+              //check plant's full adjacents for air
+              ArrayList<Particle> plantAdjacents = adj.fullAdjacents();
+              boolean hasAir = false;
+              for (int plantLcv = 0; plantLcv < plantAdjacents.size(); plantLcv++) {
+                if (plantAdjacents.get(plantLcv).type.equals("Air")) {
+                  hasAir = true;
+                  break;
+                }
+              }
+
+              //if the plant has air fully adjacent
+              if (hasAir) {
+                //ignite the plant 
+                adj.setType("Fire");
+              }
+              //if the plant has no air
+              else {
+                //convert to char
+                adj.setType("Char");
+              }
+
+              interacted = true;
+            }
+            //interact lava with char
+            else if (adj.type.equals("Char")) {
+              //check char's full adjacents for air
+              ArrayList<Particle> charAdjacents = adj.fullAdjacents();
+              boolean hasAir = false;
+              for (int charLcv = 0; charLcv < charAdjacents.size(); charLcv++) {
+                if (charAdjacents.get(charLcv).type.equals("Air")) {
+                  hasAir = true;
+                  break;
+                }
+              }
+
+              //if the char has air fully adjacent
+              if (hasAir) {
+                //ignite the char 
+                adj.setType("Fire");
+              }
+              //if the char has no air
+              else {
+                //do nothing
+              }
+
+              interacted = true;
+            }
+            //interact lava with ice
+            else if (adj.type.equals("Ice")) {
+              //convert ice to water
+              adj.setType("Water");
             }
           }
         }
@@ -342,13 +518,45 @@ public class Particle {
                   adj.setType("Plant");
                   interacted = true;
 
-                  //set to fresh so that a plant can't chain into a million particles in one step
-                  adj.fresh = true;
-
                   //plant cannot grow multiple times into one particle, so end the loop as soon as plant grows
                   break;
                 }
               }
+            }
+          }
+        }
+        //interact ice
+        else if (type.equals("Ice")) {
+          //check full adjacents 
+          for (int lcv = 0; lcv < halfAdjacents.size(); lcv++) {
+            // check for water
+            adj = halfAdjacents.get(lcv);
+            if (adj.type.equals("Water")) {
+              adj.setType("Ice");
+              interacted = true;
+            }
+          }
+        }
+        //interact air 
+        //this didn't end up getting into the game.
+        else if (lost && type.equals("Air") && false) {
+          ArrayList<Particle> adjacents;
+          //randomly decide to use full or half neighbors
+          //half adjacents
+          if (int(random(0, 2)) == 0) {
+            adjacents = halfAdjacents;
+          } 
+          //full adjacents
+          else {
+            adjacents = fullAdjacents;
+          }
+
+          //search adjacents for non air
+          for (int lcv = 0; lcv < adjacents.size(); lcv++) {
+            adj = adjacents.get(lcv);
+            if (!adj.type.equals("Air")) {
+              adj.setType("Air");
+              score--;
             }
           }
         }

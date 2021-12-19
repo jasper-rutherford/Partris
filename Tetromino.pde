@@ -248,7 +248,7 @@ public class Tetromino {
           int xIndex = int((block.x + offsetX) * particlesPerEdge + particleX);
           int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY + particleOffset);
 
-          grid.particleGrid[xIndex][yIndex].setType(type); 
+          grid.particleGrid[xIndex][yIndex].setType(type);
         }
       }
     }
@@ -323,8 +323,27 @@ public class Tetromino {
     }
   }
 
-  public void render() {
-    fill(colour);
+  public void render(boolean drawText) {
+    if (drawText) {
+      //render the text
+      textSize(50);
+      fill(255, 255, 255);
+      float textX = grid.cornerX + blockWidth * 3;
+      float textY = grid.cornerY - blockWidth / 3;
+      for (int x = -1; x < 2; x++) {
+        //  for(int y = -1; y < 2; y++){
+        //    text("LIKE THIS!", 20+x,20+y);
+        //  }
+        text(type, textX + x, textY);
+        text(type, textX, textY + x);
+      }
+      fill(colour);
+      text(type, textX, textY);
+    } else
+    {
+      fill(colour);
+    }
+    //render the blocks
     for (int lcv = 0; lcv < 4; lcv++) {
       Block block = blocks[lcv];
       rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth + particleOffset * particleWidth, blockWidth, blockWidth);

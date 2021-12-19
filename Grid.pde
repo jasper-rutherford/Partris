@@ -92,6 +92,7 @@ public class Grid {
     for (int lcv = 0; lcv < 7; lcv++) {
       shapes.add(lcv);
     }
+    println("filled shapes");
   }
 
   //picks a random shape from the list, removes it from the list, and returns it
@@ -109,13 +110,14 @@ public class Grid {
   //fill the particle types
   void fillTypes() {
     for (int lcv = 0; lcv < allTypes.size(); lcv++) {
-     types.add(allTypes.get(lcv)); 
+      types.add(allTypes.get(lcv));
     }
+    println("refilled types");
   }
 
   //updates all the particles, then updates which blocks in the grid are active/full
   public void updateParticles() {
-    int numAwake = 0;
+    int numNonAir = 0;
     //update each particle's location
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).move();
@@ -123,13 +125,25 @@ public class Grid {
     //have all the particles interact
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).interact();
-      if (particleList.get(lcv).awake) {
-        numAwake++;
+    }
+    //count non air particles
+    for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
+      for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
+        if (!particleGrid[x][y].type.equals("Air")) {
+          numNonAir++;
+        }
       }
     }
-    println(numAwake, "are awake");
     updateBlockStats();
     grid.checkRows();
+    //if (lost) {
+    //  if (numNonAir == 0) {
+    //    println("Lost");
+    //    babooska = true;
+    //  } else {
+    println("Score:", score);
+    //  }
+    //}
   }
 
   //updates which blocks in the grid are active/full
@@ -157,7 +171,7 @@ public class Grid {
         }
 
         blocks[x][y].active = active;
-        blocks[x][y].full = numParticles > particlesPerBlock / 2.0;
+        blocks[x][y].full = numParticles > particlesPerBlock * fullFactor;
       }
     }
   }
@@ -180,6 +194,10 @@ public class Grid {
     colorMap.put("Fire", new Color(235, 64, 52));
     colorMap.put("Water", new Color(66, 135, 245));
     colorMap.put("Plant", new Color(50, 168, 82));
+    colorMap.put("Lava", new Color(214, 111, 32));
+    colorMap.put("Ice", new Color(150, 183, 235));
+    colorMap.put("Stone", new Color(112, 112, 112));
+    colorMap.put("Char", new Color(43, 43, 43));
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -223,13 +241,25 @@ public class Grid {
 
   //clear the row at the given row
   void clearRow(int row) {
+    int numParticles = 0;
     //clear the row
     for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
       for (int py = row * particlesPerEdge; py < row * particlesPerEdge + particlesPerEdge; py++) {
-        particleGrid[px][py].setType("Air");
+        Particle p = particleGrid[px][py];
+
+        //if the particle is not air
+        if (!p.type.equals("Air")) {
+          //increment the number of particles and set the particle to air
+          numParticles++;
+          p.setType("Air");
+        }
       }
     }
 
+    //increase the score
+    //every particle you clear is 5 points
+    score += numParticles * 5;
+    println("Score:", score);
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -310,6 +340,7 @@ public class Grid {
     //draw rectangle background
     fill(200, 200, 200);
     rect(cornerX, cornerY, totWidth, totHeight);
+    
 
     //loop through/render full blocks
     for (int x = 0; x < gridWidth; x++) {
@@ -321,6 +352,12 @@ public class Grid {
     //render the falling tetromino
     tetromino.render();
 
+    ////draw box for tetromino's particle's type
+    // fill(120, 120, 120);
+    // strokeWeight(4);
+    // rect(cornerX, cornerY - blockWidth * 3, blockWidth * 10, blockWidth * 3);
+    //strokeWeight(1);
+    
     //draw the ghost block if enabled
     if (ghostBlock) {
       //duplicate the tetromino, but decrease the alpha
@@ -361,8 +398,14 @@ public class Grid {
     //draw grid border
     strokeWeight(4);
     noFill();
+    if (debug) {
+      stroke(255, 0, 0);
+    }
     rect(cornerX, cornerY, totWidth, totHeight);
     strokeWeight(1);
+    if (debug) {
+      stroke(0, 0, 0);
+    }
 
     //the held box
     fill(120, 120, 120);

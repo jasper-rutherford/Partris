@@ -22,12 +22,16 @@ int particlesPerEdge = 10;
 int particlesPerBlock = particlesPerEdge * particlesPerEdge;
 float particleWidth = int(blockWidth / particlesPerEdge);
 
+float fullFactor = 2.0/3;
+
 //how long in milliseconds that a block takes to fall one row
-float blockTime = 1000;
-float particleTime = 333;
+float baseBlockTime = 1000;
+float blockTime = baseBlockTime;
+float baseParticleTicksPerSecond = 30.0;
 
 long oldDropTime;
 long oldParticleTime;
+long startTime;
 int particleUpdate;
 
 int baseFuel = 500;
@@ -36,21 +40,26 @@ Grid grid;
 
 Block templates[][][] = new Block[7][4][4];
 
-boolean debug = true;
+ArrayList<Integer> inputs = new ArrayList<Integer>();
+ArrayList<Integer> konami = new ArrayList<Integer>();
+boolean debug = false;
 boolean checkingRows = true;
 boolean alphaSleep = false;
 boolean autoParticle = true;
 boolean autoFall = true;
+boolean numRowFunc = false;
 
 boolean lost;
 
 long lastTime = System.nanoTime();
-double amountOfTicks = 30.0;
+double amountOfTicks = baseParticleTicksPerSecond;
 double ns = 1000000000 / amountOfTicks;
 double delta = 0;
 long timer = System.currentTimeMillis(); 
 
 ArrayList<String> allTypes;
+
+int score;
 
 
 void setup() {
@@ -65,6 +74,10 @@ void setup() {
   allTypes.add("Fire");
   allTypes.add("Water");
   allTypes.add("Plant");
+  allTypes.add("Lava");
+  allTypes.add("Ice");
+  allTypes.add("Stone");
+  allTypes.add("Char");
 
   //build the grid
   grid = new Grid();
@@ -74,12 +87,51 @@ void setup() {
   //set oldTimes to the current time
   oldDropTime = System.currentTimeMillis();
   oldParticleTime = System.currentTimeMillis();
+  startTime = System.currentTimeMillis();
+
+  //setup konami
+  inputs.add(38);
+  konami.add(38);
+  inputs.add(38);
+  konami.add(38);
+  inputs.add(40);
+  konami.add(40);
+  inputs.add(40);
+  konami.add(40);
+  inputs.add(37);
+  konami.add(37);
+  inputs.add(39);
+  konami.add(39);
+  inputs.add(37);
+  konami.add(37);
+  inputs.add(39);
+  konami.add(39);
+  inputs.add(66);
+  konami.add(66);
+  inputs.add(65);
+  konami.add(65);
+
+  score = 0;
 }
 
 void lose() {
   if (!lost) {
+    //amountOfTicks = 7;
+    //ns = 1000000000 / amountOfTicks;
     lost = true;
-    System.out.println("lost");
+    
+    println("lost");
+
+    ////wake up all air particles
+    //for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
+    //  for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
+    //    Particle p = grid.particleGrid[x][y];
+
+    //    if (p.type.equals("Air")) {
+    //      p.wake();
+    //    }
+    //  }
+    //}
   }
 }
 
@@ -89,17 +141,22 @@ void draw() {
   lastTime = now;
   while (delta >= 1)
   {
-    if (autoParticle) {
+    if (autoParticle && !lost) {
       grid.updateParticles();
     }
     delta--;
   }
   long currTime = System.currentTimeMillis();
 
-  //if (!lost && currTime - oldDropTime >= particleTime) {
-  //  //update the particles roughly the same amount of times per second
-  //  grid.updateParticles();
-  //}
+  if (!lost) {
+    //speed up the blockTime over time
+    //blocktime is roughly equal to 1000 times .80 ^ the number of minutes since the game began
+    blockTime = 1000 * pow(0.80, (currTime - startTime) / 60000.0);
+
+
+    amountOfTicks = baseParticleTicksPerSecond * baseBlockTime / blockTime;
+    ns = 1000000000 / amountOfTicks;
+  } 
 
   //lower the block once a second (TODO: make this speed up over time)
   if (!lost && currTime - oldDropTime >= blockTime) {
@@ -112,7 +169,21 @@ void draw() {
 
   background(60, 60, 60);
   grid.render();
+
+  if (debug) {
+    renderDebugControls();
+  }
 }    
+
+void renderDebugControls() {
+  fill(120, 120, 120);
+  strokeWeight(4);
+  float cornerX = grid.cornerX - blockWidth * 7;
+  float cornerY = grid.cornerY + blockWidth * 7;
+
+  rect(cornerX, cornerY, blockWidth * 6, blockWidth * 11);
+  strokeWeight(1);
+}
 
 //key controls
 void keyPressed() {
@@ -124,6 +195,7 @@ void keyPressed() {
 
   //r restarts
   if (key == 'r' || key == 'R') {
+    println("restarting");
     setup();
   }
 
@@ -132,7 +204,7 @@ void keyPressed() {
     grid.tetromino.shape = (grid.tetromino.shape + 1) % 7;
     grid.tetromino.copyTemplate();
   }
-  //\ advances to next shape (if debug mode is enabled)
+  //\ advances to next type (if debug mode is enabled)
   if (debug && key == '\\') {
     int index = allTypes.indexOf(grid.tetromino.type);
     grid.tetromino.setType(allTypes.get((index + 1) % allTypes.size()));
@@ -140,30 +212,79 @@ void keyPressed() {
   }
 
   //d toggles whether rows clear (if debug mode is enabled)
-  if (debug && key == 'd' || key == 'D') {
+  if (debug && (key == 'd' || key == 'D')) {
     checkingRows = !checkingRows;
     println("toggled rowCheck", checkingRows);
   }
   //f toggles whether blocks fall automatically (if debug mode is enabled)
-  if (debug && key == 'f' || key == 'F') {
+  if (debug && (key == 'f' || key == 'F')) {
     autoFall = !autoFall;
     println("toggled autoFall", autoFall);
   }
 
   //x toggles whether particles update automatically (if debug mode is enabled)
-  if (debug && key == 'x' || key == 'X') {
+  if (debug && (key == 'x' || key == 'X')) {
     autoParticle = !autoParticle;
     println("toggled autoParticle", autoParticle);
   }
   //z manually updates all the particles one tick, only if autoParticle is off (if debug mode is enabled)
-  if (debug && key == 'z' || key == 'Z' && !autoParticle) {
+  if (debug && (key == 'z' || key == 'Z') && !autoParticle) {
     grid.updateParticles();
     println("forced a particle update");
   }
   //a toggles whether sleeping particles half reduced alpha (if debug mode is enabled)
-  if (debug && key == 'a' || key == 'A') {
+  if (debug && (key == 'a' || key == 'A')) {
     alphaSleep = !alphaSleep;
     println("toggled alphaSleep", alphaSleep);
+  }
+
+  //` toggles the functionality of the number row (if debug mode is enabled)
+  if (debug && key == '`') {
+    numRowFunc = !numRowFunc;
+    if (numRowFunc) {
+      println("numRowFunc toggled: shapes");
+    } else {
+      println("numRowFunc toggled: types");
+    }
+  }
+
+  // disables debug mode (if debug mode is enabled)
+  if (debug && key == '/') {
+    debug = false;
+    println("debug mode disabled");
+  }
+
+  //sets the type to the (n - 1)th type/shape (except 0 is 9) (type/shape decided by numRowFunc) (if debug mode is enabled)
+  if (debug && ((key == '1') || (key == '2') || (key == '3') || (key == '4') || (key == '5') || (key == '6') || (key == '7') || (key == '8') || (key == '9') || (key == '0'))) {
+    int num = 9;
+    if (key == '1') {
+      num = 0;
+    } else if (key == '2') {
+      num = 1;
+    } else if (key == '3') {
+      num = 2;
+    } else if (key == '4') {
+      num = 3;
+    } else if (key == '5') {
+      num = 4;
+    } else if (key == '6') {
+      num = 5;
+    } else if (key == '7') {
+      num = 6;
+    } else if (key == '8') {
+      num = 7;
+    } else if (key == '9') {
+      num = 8;
+    }
+    //set type
+    if (numRowFunc) {
+      grid.tetromino.setType(allTypes.get(num % allTypes.size()));
+    } 
+    //set shape
+    else {
+      grid.tetromino.shape = num % 7;
+      grid.tetromino.copyTemplate();
+    }
   }
 
   //space slams
@@ -190,6 +311,24 @@ void keyPressed() {
     grid.tetromino.down();
     //set oldTime to the current time
     oldDropTime = System.currentTimeMillis();
+  }
+
+  konamiCheck(keyCode);
+}
+
+void konamiCheck(int code) {
+  inputs.remove(0);
+  inputs.add(code);
+
+  boolean match = true;
+  for (int lcv = 0; lcv < konami.size(); lcv++) {
+    if (inputs.get(lcv) != konami.get(lcv)) {
+      match = false;
+    }
+  }
+  if (!debug && match) {
+    debug = true;
+    println("Activating debug mode");
   }
 }
 
