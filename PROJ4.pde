@@ -77,7 +77,7 @@ void setup() {
   allTypes.add("Lava");
   allTypes.add("Ice");
   allTypes.add("Stone");
-  allTypes.add("Char");
+  allTypes.add("Charcoal");
 
   //build the grid
   grid = new Grid();
@@ -89,28 +89,29 @@ void setup() {
   oldParticleTime = System.currentTimeMillis();
   startTime = System.currentTimeMillis();
 
-  //setup konami
-  inputs.add(38);
-  konami.add(38);
-  inputs.add(38);
-  konami.add(38);
-  inputs.add(40);
-  konami.add(40);
-  inputs.add(40);
-  konami.add(40);
-  inputs.add(37);
-  konami.add(37);
-  inputs.add(39);
-  konami.add(39);
-  inputs.add(37);
-  konami.add(37);
-  inputs.add(39);
-  konami.add(39);
-  inputs.add(66);
-  konami.add(66);
-  inputs.add(65);
-  konami.add(65);
-
+  if (konami.size() == 0) {
+    //setup konami
+    inputs.add(38);
+    konami.add(38);
+    inputs.add(38);
+    konami.add(38);
+    inputs.add(40);
+    konami.add(40);
+    inputs.add(40);
+    konami.add(40);
+    inputs.add(37);
+    konami.add(37);
+    inputs.add(39);
+    konami.add(39);
+    inputs.add(37);
+    konami.add(37);
+    inputs.add(39);
+    konami.add(39);
+    inputs.add(66);
+    konami.add(66);
+    inputs.add(65);
+    konami.add(65);
+  }
   score = 0;
 }
 
@@ -119,7 +120,7 @@ void lose() {
     //amountOfTicks = 7;
     //ns = 1000000000 / amountOfTicks;
     lost = true;
-    
+
     println("lost");
 
     ////wake up all air particles

@@ -92,7 +92,6 @@ public class Grid {
     for (int lcv = 0; lcv < 7; lcv++) {
       shapes.add(lcv);
     }
-    println("filled shapes");
   }
 
   //picks a random shape from the list, removes it from the list, and returns it
@@ -112,12 +111,11 @@ public class Grid {
     for (int lcv = 0; lcv < allTypes.size(); lcv++) {
       types.add(allTypes.get(lcv));
     }
-    println("refilled types");
   }
 
   //updates all the particles, then updates which blocks in the grid are active/full
   public void updateParticles() {
-    int numNonAir = 0;
+    //int numNonAir = 0;
     //update each particle's location
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).move();
@@ -126,14 +124,14 @@ public class Grid {
     for (int lcv = 0; lcv < particleList.size(); lcv++) {
       particleList.get(lcv).interact();
     }
-    //count non air particles
-    for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
-      for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
-        if (!particleGrid[x][y].type.equals("Air")) {
-          numNonAir++;
-        }
-      }
-    }
+    ////count non air particles
+    //for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
+    //  for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
+    //    if (!particleGrid[x][y].type.equals("Air")) {
+    //      numNonAir++;
+    //    }
+    //  }
+    //}
     updateBlockStats();
     grid.checkRows();
     //if (lost) {
@@ -141,7 +139,6 @@ public class Grid {
     //    println("Lost");
     //    babooska = true;
     //  } else {
-    println("Score:", score);
     //  }
     //}
   }
@@ -180,6 +177,8 @@ public class Grid {
   public String pickType() {
     if (types.size() == 0) {
       fillTypes();
+      for (int lcv = 0; lcv < types.size(); lcv++) {
+      }
     }
 
     int index = int(random(0, types.size()));
@@ -197,7 +196,7 @@ public class Grid {
     colorMap.put("Lava", new Color(214, 111, 32));
     colorMap.put("Ice", new Color(150, 183, 235));
     colorMap.put("Stone", new Color(112, 112, 112));
-    colorMap.put("Char", new Color(43, 43, 43));
+    colorMap.put("Charcoal", new Color(43, 43, 43));
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -259,7 +258,6 @@ public class Grid {
     //increase the score
     //every particle you clear is 5 points
     score += numParticles * 5;
-    println("Score:", score);
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -350,7 +348,7 @@ public class Grid {
     }
 
     //render the falling tetromino
-    tetromino.render();
+    tetromino.render(true);
 
     ////draw box for tetromino's particle's type
     // fill(120, 120, 120);
@@ -363,7 +361,10 @@ public class Grid {
       //duplicate the tetromino, but decrease the alpha
       Tetromino ghost = new Tetromino(tetromino);
       ghost.colour.a = 127;
-
+      
+      if (ghost.type.equals("Charcoal")) {
+       ghost.colour.a = int(255 * .75); 
+      }
       //slam the duplicate but don't place it
       ghost.slam(false);
 
@@ -371,7 +372,7 @@ public class Grid {
       ghost.particleSlam();
 
       //render the ghost
-      ghost.render();
+      ghost.render(false);
     }
 
     //render the particles
@@ -511,5 +512,18 @@ public class Grid {
         rect(centerX + (xOffset + queued.blocks[lcv].x) * blockWidth - blockWidth / 2.0, centerY + (yOffset + queued.blocks[lcv].y) * blockWidth - blockWidth / 2.0, blockWidth, blockWidth);
       }
     }
+    
+    //render the score
+      textSize(25);
+      fill(255, 255, 255);
+      float textX = grid.cornerX - blockWidth * 7;
+      float textY = grid.cornerY - blockWidth / 2;
+      
+      for (int x = -1; x < 2; x++) {
+        text("Score: " + score, textX + x, textY);
+        text("Score: " + score, textX, textY + x);
+      }
+      fill(0, 0, 0);
+      text("Score: " + score, textX, textY);
   }
 }

@@ -330,6 +330,16 @@ public class Tetromino {
       fill(255, 255, 255);
       float textX = grid.cornerX + blockWidth * 3;
       float textY = grid.cornerY - blockWidth / 3;
+      
+      if (type.equals("Charcoal")) {
+       textX -= blockWidth * 1.5; 
+      }
+      else if (type.equals("Ice")) {
+       textX += blockWidth * 1; 
+      }
+      else if (type.equals("Fire")) {
+       textX += blockWidth * .5; 
+      }
       for (int x = -1; x < 2; x++) {
         //  for(int y = -1; y < 2; y++){
         //    text("LIKE THIS!", 20+x,20+y);

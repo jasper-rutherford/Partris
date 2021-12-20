@@ -72,14 +72,13 @@ public class Particle {
     //fuel any new fire
     if ((prevType.equals("Air") || prevType.equals("Plant")) && type.equals("Fire")) {
       fuel = baseFuel;
-    } else if (prevType.equals("Char") && type.equals("Fire")) {
+    } else if (prevType.equals("Charcoal") && type.equals("Fire")) {
       fuel = baseFuel * 3;
     } 
     
     //if this is a fire that burned out then gain a point
     if (!lost && prevType.equals("Fire") && type.equals("Air")) {
       score++;
-      println("Score:", score);
     }
 
     fresh = true;
@@ -92,7 +91,10 @@ public class Particle {
       //  test.a /= 2;
       //}
       fill(colour);
-      if (!awake && alphaSleep) {
+      if (awake && alphaSleep) {
+        strokeWeight(1);
+      }
+      else {
         strokeWeight(0);
       }
       rect(x, y, particleWidth, particleWidth);
@@ -397,7 +399,7 @@ public class Particle {
                 }
               }
               //interact fire with char
-              if (adj.type.equals("Char")) {
+              if (adj.type.equals("Charcoal")) {
                 //loop through the char's half adjacents
                 ArrayList<Particle> charAdjacents = adj.halfAdjacents();
                 for (int charLcv = 0; charLcv < charAdjacents.size(); charLcv++) {
@@ -443,8 +445,8 @@ public class Particle {
             }
             //interact lava with plant 
             else if (adj.type.equals("Plant")) {
-              //check plant's full adjacents for air
-              ArrayList<Particle> plantAdjacents = adj.fullAdjacents();
+              //check plant's half adjacents for air
+              ArrayList<Particle> plantAdjacents = adj.halfAdjacents();
               boolean hasAir = false;
               for (int plantLcv = 0; plantLcv < plantAdjacents.size(); plantLcv++) {
                 if (plantAdjacents.get(plantLcv).type.equals("Air")) {
@@ -461,15 +463,15 @@ public class Particle {
               //if the plant has no air
               else {
                 //convert to char
-                adj.setType("Char");
+                adj.setType("Charcoal");
               }
 
               interacted = true;
             }
             //interact lava with char
-            else if (adj.type.equals("Char")) {
-              //check char's full adjacents for air
-              ArrayList<Particle> charAdjacents = adj.fullAdjacents();
+            else if (adj.type.equals("Charcoal")) {
+              //check char's half adjacents for air
+              ArrayList<Particle> charAdjacents = adj.halfAdjacents();
               boolean hasAir = false;
               for (int charLcv = 0; charLcv < charAdjacents.size(); charLcv++) {
                 if (charAdjacents.get(charLcv).type.equals("Air")) {
