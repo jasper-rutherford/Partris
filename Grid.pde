@@ -39,8 +39,6 @@ public class Grid {
 
   public ArrayList<Particle> particleList;
 
-  public boolean[][] waterGrid;
-
   //default constructor
   public Grid() {
 
@@ -72,9 +70,6 @@ public class Grid {
         blocks[x][y] = new Block(x, y);
       }
     }
-
-    //create the waterGrid
-    waterGrid = new boolean[gridWidth * particlesPerEdge][gridHeight * particlesPerEdge];
   }
 
   public void setupParticleStuff() {

@@ -31,8 +31,6 @@ public class Particle {
   public Particle(String type, int xIndex, int yIndex) {
     this.xIndex = xIndex;
     this.yIndex = yIndex;
-    
-    grid.waterGrid[xIndex][yIndex] = false;
 
     x = grid.cornerX + xIndex * particleWidth;
     y = grid.cornerY + yIndex * particleWidth;
