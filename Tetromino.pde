@@ -101,6 +101,15 @@ public class Tetromino {
     }
   }
 
+  public void up() {
+    //if an upward movement wouldn't collide with anything
+    if (!grid.tetromino.collision(0, -1))
+    {
+      //move the block up one row
+      grid.tetromino.offsetY--;
+    }
+  }
+
   public void left() {
     //if a downward movement wouldn't collide with anything
     if (!grid.tetromino.collision(-1, 0))
@@ -193,12 +202,16 @@ public class Tetromino {
   //one 90 degree clockwise rotation
   public void rotateRight() {
 
-    //create new tetromino with rotation from current location
-    Tetromino rotated = new Tetromino(shape, (rotation + 1) % 4);
-    rotated.type = type;
-    rotated.colour = colour;
-    rotated.offsetX = offsetX;
-    rotated.offsetY = offsetY;
+    ////create new tetromino with rotation from current location
+    //Tetromino rotated = new Tetromino(shape, (rotation + 1) % 4);
+    //rotated.type = type;
+    //rotated.colour = colour;
+    //rotated.offsetX = offsetX;
+    //rotated.offsetY = offsetY;
+
+    Tetromino rotated = new Tetromino(this);
+    rotated.rotation = (rotation + 1) % 4;
+    rotated.copyTemplate();
 
     //if that new piece has no collisions
     if (!rotated.collision(0, 0)) {
@@ -330,15 +343,13 @@ public class Tetromino {
       fill(255, 255, 255);
       float textX = grid.cornerX + blockWidth * 3;
       float textY = grid.cornerY - blockWidth / 3;
-      
+
       if (type.equals("Charcoal")) {
-       textX -= blockWidth * 1.5; 
-      }
-      else if (type.equals("Ice")) {
-       textX += blockWidth * 1; 
-      }
-      else if (type.equals("Fire")) {
-       textX += blockWidth * .5; 
+        textX -= blockWidth * 1.5;
+      } else if (type.equals("Ice")) {
+        textX += blockWidth * 1;
+      } else if (type.equals("Fire")) {
+        textX += blockWidth * .5;
       }
       for (int x = -1; x < 2; x++) {
         //  for(int y = -1; y < 2; y++){
@@ -358,5 +369,9 @@ public class Tetromino {
       Block block = blocks[lcv];
       rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth + particleOffset * particleWidth, blockWidth, blockWidth);
     }
+  }
+
+  public String toString() {
+    return "[Tetromino]\n\tShape: " + shape + "\n\tRotation: " + rotation + "\n\tRotation: " + rotation + "\n\tX/Y Offset: (" + offsetX + ", " + offsetY + ")";
   }
 }

@@ -18,9 +18,9 @@ int blockWidth = 30;
 int gridWidth = 10;
 int gridHeight = 20;
 
-int particlesPerEdge = 10;
+int particlesPerEdge = 25;
 int particlesPerBlock = particlesPerEdge * particlesPerEdge;
-float particleWidth = int(blockWidth / particlesPerEdge);
+float particleWidth = blockWidth / float(particlesPerEdge);
 
 float fullFactor = 2.0/3;
 
@@ -49,6 +49,7 @@ boolean autoParticle = true;
 boolean autoFall = true;
 boolean numRowFunc = false;
 
+boolean paused = false;
 boolean lost;
 
 long lastTime = System.nanoTime();
@@ -142,25 +143,25 @@ void draw() {
   lastTime = now;
   while (delta >= 1)
   {
-    if (autoParticle && !lost) {
+    if (!paused && autoParticle && !lost) {
       grid.updateParticles();
     }
     delta--;
   }
   long currTime = System.currentTimeMillis();
 
-  if (!lost) {
+  if (!lost && !paused) {
     //speed up the blockTime over time
     //blocktime is roughly equal to 1000 times .80 ^ the number of minutes since the game began
     blockTime = 1000 * pow(0.80, (currTime - startTime) / 60000.0);
 
 
     amountOfTicks = baseParticleTicksPerSecond * baseBlockTime / blockTime;
-    ns = 1000000000 / amountOfTicks;
+    // ns = 1000000000 / amountOfTicks;
   } 
 
   //lower the block once a second (TODO: make this speed up over time)
-  if (!lost && currTime - oldDropTime >= blockTime) {
+  if (!paused && !lost && currTime - oldDropTime >= blockTime) {
     oldDropTime = currTime;
 
     if (autoFall) {
@@ -171,20 +172,20 @@ void draw() {
   background(60, 60, 60);
   grid.render();
 
-  if (debug) {
-    renderDebugControls();
+
+  if (paused) {
+    textSize(150);
+    fill(0, 0, 0);
+    float textX = width / 2 - blockWidth * 8.5;
+    float textY = height / 2 - blockWidth * 0;
+    for (int x = -1; x < 2; x++) {
+      text("Paused", textX + x, textY);
+      text("Paused", textX, textY + x);
+    }
+    fill(248, 255, 48);
+    text("Paused", textX, textY);
   }
 }    
-
-void renderDebugControls() {
-  fill(120, 120, 120);
-  strokeWeight(4);
-  float cornerX = grid.cornerX - blockWidth * 7;
-  float cornerY = grid.cornerY + blockWidth * 7;
-
-  rect(cornerX, cornerY, blockWidth * 6, blockWidth * 11);
-  strokeWeight(1);
-}
 
 //key controls
 void keyPressed() {
@@ -233,7 +234,7 @@ void keyPressed() {
     grid.updateParticles();
     println("forced a particle update");
   }
-  //a toggles whether sleeping particles half reduced alpha (if debug mode is enabled)
+  //a toggles whether sleeping particles have a border around them (if debug mode is enabled)
   if (debug && (key == 'a' || key == 'A')) {
     alphaSleep = !alphaSleep;
     println("toggled alphaSleep", alphaSleep);
@@ -253,6 +254,22 @@ void keyPressed() {
   if (debug && key == '/') {
     debug = false;
     println("debug mode disabled");
+  }
+
+ // toggles ghostBlock (if debug mode is enabled)
+  if (debug && (key == 'g' || key == 'G')) {
+    grid.ghostBlock = !grid.ghostBlock;
+  }
+
+  // p pauses everything
+  if (key == 'p' || key == 'P') {
+    paused = !paused;
+    println("toggled pause");
+  }
+
+  // L moves the tetromino up (only in debug mode)
+  if (debug && (key == 'l' || key == 'L')) {
+    grid.tetromino.up();
   }
 
   //sets the type to the (n - 1)th type/shape (except 0 is 9) (type/shape decided by numRowFunc) (if debug mode is enabled)
@@ -288,27 +305,27 @@ void keyPressed() {
     }
   }
 
-  //space slams
-  if (key == ' ') {
+  //space slams (doesn't work if paused (unless in debug mode))
+  if (((!lost && !paused) || debug) && key == ' ') {
     grid.tetromino.slam(true);
     //set oldTime to the current time
     oldDropTime = System.currentTimeMillis();
   }
 
-  //rotates the tetromino 90 degrees clockwise
-  if (keyCode == UP) {
+  //rotates the tetromino 90 degrees clockwise (doesn't work if paused or lost (unless in debug mode))
+  if (((!lost && !paused) || debug) && keyCode == UP) {
     grid.tetromino.rotateRight();
   }
-  //moves the tetromino left one block
-  if (keyCode == LEFT) {
+  //moves the tetromino left one block (doesn't work if paused or lost (unless in debug mode))
+  if (((!lost && !paused) || debug) && keyCode == LEFT) {
     grid.tetromino.left();
   }
-  //moves the tetromino right one block
-  if (keyCode == RIGHT) {
+  //moves the tetromino right one block (doesn't work if paused or lost (unless in debug mode))
+  if (((!lost && !paused) || debug) && keyCode == RIGHT) {
     grid.tetromino.right();
   }
-  //moves the tetromino down one block
-  if (keyCode == DOWN) {
+  //moves the tetromino down one block (doesn't work if paused or lost (unless in debug mode))
+  if (((!lost && !paused) || debug) && keyCode == DOWN) {
     grid.tetromino.down();
     //set oldTime to the current time
     oldDropTime = System.currentTimeMillis();

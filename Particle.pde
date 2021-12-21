@@ -31,6 +31,8 @@ public class Particle {
   public Particle(String type, int xIndex, int yIndex) {
     this.xIndex = xIndex;
     this.yIndex = yIndex;
+    
+    grid.waterGrid[xIndex][yIndex] = false;
 
     x = grid.cornerX + xIndex * particleWidth;
     y = grid.cornerY + yIndex * particleWidth;
@@ -75,7 +77,7 @@ public class Particle {
     } else if (prevType.equals("Charcoal") && type.equals("Fire")) {
       fuel = baseFuel * 3;
     } 
-    
+
     //if this is a fire that burned out then gain a point
     if (!lost && prevType.equals("Fire") && type.equals("Air")) {
       score++;
@@ -93,8 +95,7 @@ public class Particle {
       fill(colour);
       if (awake && alphaSleep) {
         strokeWeight(1);
-      }
-      else {
+      } else {
         strokeWeight(0);
       }
       rect(x, y, particleWidth, particleWidth);
@@ -109,10 +110,10 @@ public class Particle {
 
       //move water
       if (type.equals("Water")) {
-        //check the spots (including diagonals) below this particle for openness. 
-        //if any of those spots are open, move to a random one of the spots
-        //otherwise, check if the spots directly left or right are open. 
-        //then choose a random open spot to move to. if none are found then there is no movement.
+        //it checks 1. directly below, 2. the diagonals below, 3. the neighbors directly left and right. 
+        //if 1 exists, move there
+        //if 2 exists, move to one of those
+        //if 3 exists, move to one of those
         ArrayList<Particle> openSpaces = new ArrayList<Particle>();
 
         //check lower neighbor particles
@@ -122,12 +123,13 @@ public class Particle {
           Particle downRight = down.adjacentRight();
           if (down.type.equals("Air")) {
             openSpaces.add(down);
-          }
-          if (downLeft != null && downLeft.type.equals("Air")) {
-            openSpaces.add(downLeft);
-          }
-          if (downRight != null && downRight.type.equals("Air")) {
-            openSpaces.add(downRight);
+          } else {
+            if (downLeft != null && downLeft.type.equals("Air")) {
+              openSpaces.add(downLeft);
+            }
+            if (downRight != null && downRight.type.equals("Air")) {
+              openSpaces.add(downRight);
+            }
           }
         }
 
@@ -181,12 +183,13 @@ public class Particle {
           Particle downRight = down.adjacentRight();
           if (down.type.equals("Air") || down.type.equals("Water") || down.type.equals("Lava")) {
             openSpaces.add(down);
-          }
-          if (downLeft != null && (downLeft.type.equals("Air") || downLeft.type.equals("Water") || downLeft.type.equals("Lava"))) {
-            openSpaces.add(downLeft);
-          }
-          if (downRight != null && (downRight.type.equals("Air") || downRight.type.equals("Water") || downRight.type.equals("Lava"))) {
-            openSpaces.add(downRight);
+          } else {
+            if (downLeft != null && (downLeft.type.equals("Air") || downLeft.type.equals("Water") || downLeft.type.equals("Lava"))) {
+              openSpaces.add(downLeft);
+            }
+            if (downRight != null && (downRight.type.equals("Air") || downRight.type.equals("Water") || downRight.type.equals("Lava"))) {
+              openSpaces.add(downRight);
+            }
           }
         }
 
@@ -203,10 +206,10 @@ public class Particle {
       }
       //move lava
       else if (type.equals("Lava")) {
-        //check the spots (including diagonals) below this particle for openness. 
-        //if any of those spots are open, move to a random one of the spots
-        //otherwise, check if the spots directly left or right are open. 
-        //then choose a random open spot to move to. if none are found then there is no movement.
+        //it checks 1. directly below, 2. the diagonals below, 3. the neighbors directly left and right. 
+        //if 1 exists, move there
+        //if 2 exists, move to one of those
+        //if 3 exists, move to one of those
         ArrayList<Particle> openSpaces = new ArrayList<Particle>();
 
         //check lower neighbor particles
@@ -216,12 +219,13 @@ public class Particle {
           Particle downRight = down.adjacentRight();
           if (down.type.equals("Air")) {
             openSpaces.add(down);
-          }
-          if (downLeft != null && downLeft.type.equals("Air")) {
-            openSpaces.add(downLeft);
-          }
-          if (downRight != null && downRight.type.equals("Air")) {
-            openSpaces.add(downRight);
+          } else {
+            if (downLeft != null && downLeft.type.equals("Air")) {
+              openSpaces.add(downLeft);
+            }
+            if (downRight != null && downRight.type.equals("Air")) {
+              openSpaces.add(downRight);
+            }
           }
         }
 

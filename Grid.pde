@@ -39,6 +39,8 @@ public class Grid {
 
   public ArrayList<Particle> particleList;
 
+  public boolean[][] waterGrid;
+
   //default constructor
   public Grid() {
 
@@ -70,6 +72,9 @@ public class Grid {
         blocks[x][y] = new Block(x, y);
       }
     }
+
+    //create the waterGrid
+    waterGrid = new boolean[gridWidth * particlesPerEdge][gridHeight * particlesPerEdge];
   }
 
   public void setupParticleStuff() {
@@ -111,6 +116,7 @@ public class Grid {
     for (int lcv = 0; lcv < allTypes.size(); lcv++) {
       types.add(allTypes.get(lcv));
     }
+    println("Filled types");
   }
 
   //updates all the particles, then updates which blocks in the grid are active/full
@@ -235,6 +241,8 @@ public class Grid {
           clearRow(y);
         }
       }
+
+      grid.updateBlockStats();
     }
   }
 
@@ -338,7 +346,7 @@ public class Grid {
     //draw rectangle background
     fill(200, 200, 200);
     rect(cornerX, cornerY, totWidth, totHeight);
-    
+
 
     //loop through/render full blocks
     for (int x = 0; x < gridWidth; x++) {
@@ -355,15 +363,15 @@ public class Grid {
     // strokeWeight(4);
     // rect(cornerX, cornerY - blockWidth * 3, blockWidth * 10, blockWidth * 3);
     //strokeWeight(1);
-    
+
     //draw the ghost block if enabled
     if (ghostBlock) {
       //duplicate the tetromino, but decrease the alpha
       Tetromino ghost = new Tetromino(tetromino);
       ghost.colour.a = 127;
-      
+
       if (ghost.type.equals("Charcoal")) {
-       ghost.colour.a = int(255 * .75); 
+        ghost.colour.a = int(255 * .75);
       }
       //slam the duplicate but don't place it
       ghost.slam(false);
@@ -512,18 +520,18 @@ public class Grid {
         rect(centerX + (xOffset + queued.blocks[lcv].x) * blockWidth - blockWidth / 2.0, centerY + (yOffset + queued.blocks[lcv].y) * blockWidth - blockWidth / 2.0, blockWidth, blockWidth);
       }
     }
-    
+
     //render the score
-      textSize(25);
-      fill(255, 255, 255);
-      float textX = grid.cornerX - blockWidth * 7;
-      float textY = grid.cornerY - blockWidth / 2;
-      
-      for (int x = -1; x < 2; x++) {
-        text("Score: " + score, textX + x, textY);
-        text("Score: " + score, textX, textY + x);
-      }
-      fill(0, 0, 0);
-      text("Score: " + score, textX, textY);
+    textSize(25);
+    fill(255, 255, 255);
+    float textX = grid.cornerX - blockWidth * 7;
+    float textY = grid.cornerY - blockWidth / 2;
+
+    for (int x = -1; x < 2; x++) {
+      text("Score: " + score, textX + x, textY);
+      text("Score: " + score, textX, textY + x);
+    }
+    fill(0, 0, 0);
+    text("Score: " + score, textX, textY);
   }
 }
