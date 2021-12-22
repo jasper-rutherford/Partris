@@ -18,7 +18,7 @@ int blockWidth = 30;
 int gridWidth = 10;
 int gridHeight = 20;
 
-int particlesPerEdge = 30;
+int particlesPerEdge = 10;
 int particlesPerBlock = particlesPerEdge * particlesPerEdge;
 float particleWidth = blockWidth / float(particlesPerEdge);
 
