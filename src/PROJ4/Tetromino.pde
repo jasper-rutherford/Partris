@@ -60,9 +60,10 @@ public class Tetromino {
 
     particleOffset = tetromino.particleOffset;
 
-    if (collision(0, 0)) {
-      lose();
-    }
+    // if (collision(0, 0)) {
+    //   println("2");
+    //   lose();
+    // }
   }  
 
   public void setupTetromino(int shape, int rotation, String type) {
@@ -76,7 +77,7 @@ public class Tetromino {
     this.type = type;
 
     //set colour according to particle type
-    colour = grid.colorMap.get(type).copy();
+    colour = particleFactory.getColour(type);
 
     //copy in relevant blocks from the template
     copyTemplate();
@@ -96,9 +97,9 @@ public class Tetromino {
 
     particleOffset = 0;
 
-    if (collision(0, 0)) {
-      lose();
-    }
+    // if (collision(0, 0)) {
+    //   lose();
+    // }
   }
 
   public void up() {
@@ -261,18 +262,24 @@ public class Tetromino {
           int xIndex = int((block.x + offsetX) * particlesPerEdge + particleX);
           int yIndex = int((block.y + offsetY) * particlesPerEdge + particleY + particleOffset);
 
-          grid.particleGrid[xIndex][yIndex].setType(type);
+          //get the particle currently in this position
+          Particle oldParticle = grid.particleGrid[xIndex][yIndex];
+
+          //generate a new particle 
+          Particle newParticle = particleFactory.generateParticle(type, oldParticle.type, new Point(xIndex, yIndex));
+
+          //replace the old particle with the new particle
+          grid.replaceParticle(oldParticle, newParticle);
         }
       }
     }
 
     grid.updateBlockStats();
-    //shuffleParticles();
   }
 
   public void setType(String type) {
     this.type = type;
-    this.colour = grid.colorMap.get(type).copy();
+    this.colour = particleFactory.getColour(type);
   }
 
   //checks if the tetromino would collide with anything if it moved according to the given x, y
@@ -338,9 +345,9 @@ public class Tetromino {
 
   public void render(boolean drawText) {
     if (drawText) {
-      //render the text
-      textSize(50);
-      fill(255, 255, 255);
+      // //render the text
+      // textSize(50);
+      // fill(255, 255, 255);
       float textX = grid.cornerX + blockWidth * 3;
       float textY = grid.cornerY - blockWidth / 3;
 
@@ -351,15 +358,26 @@ public class Tetromino {
       } else if (type.equals("Fire")) {
         textX += blockWidth * .5;
       }
-      for (int x = -1; x < 2; x++) {
-        //  for(int y = -1; y < 2; y++){
-        //    text("LIKE THIS!", 20+x,20+y);
-        //  }
-        text(type, textX + x, textY);
-        text(type, textX, textY + x);
+      // for (int x = -1; x < 2; x++) {
+      //   //  for(int y = -1; y < 2; y++){
+      //   //    text("LIKE THIS!", 20+x,20+y);
+      //   //  }
+      //   text(type, textX + x, textY);
+      //   text(type, textX, textY + x);
+      // }
+      // fill(colour);
+      // text(type, textX, textY);
+      if (type.equals("Charcoal"))
+      {
+        drawTextWithBorder(type, textX, textY, 50, new Color(25, 25, 25), new Color(100, 100, 100));
       }
+      else
+      {
+        drawTextWithBorder(type, textX, textY, 50, colour, new Color(0, 0, 0));
+      }
+
       fill(colour);
-      text(type, textX, textY);
+
     } else
     {
       fill(colour);

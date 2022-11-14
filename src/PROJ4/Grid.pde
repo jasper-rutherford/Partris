@@ -11,6 +11,9 @@ public class Grid {
   public Block blocks[][];
   public Particle particleGrid[][];
 
+  //list of all particles in grid
+  public ArrayList<Particle> particleList;
+
   //the current tetromino
   public Tetromino tetromino;
 
@@ -35,9 +38,6 @@ public class Grid {
 
   public ArrayList<Integer> shapes;
   public ArrayList<String> types;
-  public HashMap<String, Color> colorMap;
-
-  public ArrayList<Particle> particleList;
 
   //default constructor
   public Grid() {
@@ -58,10 +58,8 @@ public class Grid {
 
     shapes = new ArrayList<Integer>();
     types = new ArrayList<String>();
-    colorMap = new HashMap<String, Color>();
     fillShapes();
     fillTypes();
-    fillTypeColors();
 
     //fill the grid with inactive blocks
     blocks = new Block[gridWidth][gridHeight];
@@ -70,21 +68,80 @@ public class Grid {
         blocks[x][y] = new Block(x, y);
       }
     }
+
+    println("filled grid");
   }
 
   public void setupParticleStuff() {
-    //initialize the particleGrid and particleList
+    //initialize the particleGrid
     particleGrid = new Particle[gridWidth * particlesPerEdge][gridHeight * particlesPerEdge];
+
+    //initialize the particle list
     particleList = new ArrayList<Particle>();
 
     //all particles default to air
-    for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
-      for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
-        particleGrid[x][y] = new Particle("Air", x, y);
-        particleList.add(particleGrid[x][y]);
+    for (int x = 0; x < gridWidth * particlesPerEdge; x++) 
+    {
+      for (int y = 0; y < gridHeight * particlesPerEdge; y++) 
+      {
+        //create a new particle 
+        Particle particle = particleFactory.generateParticle("Air", "Air", new Point(x, y));
+
+        //add particle to grid
+        particleGrid[x][y] = particle;
+
+        //add particle to particle list
+        particleList.add(particle);
+
+        //set particle's position in the list
+        particle.listIndex = particleList.size() - 1;
       }
     }
-    shuffleParticles();
+
+    //shuffle the particle list
+    shuffleParticleList();
+
+    //loop through particle list
+    for (int i = 0; i < particleList.size(); i++)
+    {
+      //get particle
+      Particle particle = particleList.get(i);
+
+      //set each particle's position in the list
+      particle.listIndex = i;
+    }
+  }
+
+  //randomizes the order of all the particles in the particleList
+  //ensures that each particle knows its new index in the particleList
+  void shuffleParticleList() 
+  {
+    println("particle list size before shuffle: " + particleList.size());
+    ArrayList<Particle> temp = new ArrayList<Particle>();
+
+    //need to save size because the original list will shrink as the loop progresses
+    int size = particleList.size();
+
+    //loop through all particles in the particle list
+    for (int lcv = 0; lcv < size; lcv++) 
+    {
+      //get random particle from the old list
+      int index = int(random(0, particleList.size()));
+      Particle particle = particleList.get(index);
+
+      //add it to the new list (in new position)
+      temp.add(particle);
+
+      //update that particle's position
+      particle.listIndex = lcv;
+
+      //remove the particle from the old list
+      particleList.remove(index);
+    }
+
+    //replace old list with new list
+    particleList = temp;
+    println("particle list size after shuffle: " + particleList.size());
   }
 
   //refills the shapes list with all shape options
@@ -115,33 +172,78 @@ public class Grid {
   }
 
   //updates all the particles, then updates which blocks in the grid are active/full
-  public void updateParticles() {
-    //int numNonAir = 0;
-    //update each particle's location
-    for (int lcv = 0; lcv < particleList.size(); lcv++) {
-      particleList.get(lcv).move();
+  public void updateParticles() 
+  {
+    //try to move each particle
+    // for (Particle[] line : particleGrid)
+    // {
+    //   for (Particle particle : line)
+    //   {
+    // for (int x = gridWidth * particlesPerEdge - 1; x >= 0; x--) {
+    //   // for (int y = gridHeight * particlesPerEdge - 1; y >= 0; y--) {
+    //   for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
+    for (Particle particle : particleList) 
+    {
+      // if (!particle.type.equals("Air"))
+        // println("updating a particle of type " + particle.type);
+      // Particle particle = particleGrid[x][y];
+      //if the particle is awake and not fresh
+      if (particle.awake && !particle.fresh)
+      {
+        //mark the particle as not moved
+        particle.moved = false;
+
+        //have it try to move
+        particle.move();
+      }
+      // }
     }
-    //have all the particles interact
-    for (int lcv = 0; lcv < particleList.size(); lcv++) {
-      particleList.get(lcv).interact();
-    }
-    ////count non air particles
-    //for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
-    //  for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
-    //    if (!particleGrid[x][y].type.equals("Air")) {
-    //      numNonAir++;
-    //    }
-    //  }
-    //}
+    
+    //try to interact each particle
+    // for (Particle[] line : particleGrid)
+    // {
+    //   for (Particle particle : line)
+    //   {
+    // for (int x = gridWidth * particlesPerEdge - 1; x >= 0; x--) {
+    //   // for (int y = gridHeight * particlesPerEdge - 1; y >= 0; y--) {
+    //   for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
+    //     Particle particle = particleGrid[x][y];
+    for (Particle particle : particleList) {
+
+        //if the particle is awake
+        if (particle.awake)
+        {
+          //if the particle is fresh, it does nothing and becomes non-fresh
+          //if the particle was created this step by another particle (probably in an interaction), then this particle does nothing this step
+          if (particle.fresh)
+          {
+            particle.fresh = false;
+          }
+          //if it's not fresh though then it's good to go
+          else
+          {
+            //mark the particle as not interacted
+            particle.interacted = false;
+
+            //have it try to interact
+            particle.interact();
+
+            //check if the particle should go to sleep
+            //if this particle did not move or interact with anything then it goes to sleep (stops being awake)
+            if (!particle.moved && !particle.interacted) 
+            {
+              particle.sleep();
+            }
+          }
+        }
+      }
+    // }
+
+    //update the block stats
     updateBlockStats();
+
+    //check if any rows have been cleared
     grid.checkRows();
-    //if (lost) {
-    //  if (numNonAir == 0) {
-    //    println("Lost");
-    //    babooska = true;
-    //  } else {
-    //  }
-    //}
   }
 
   //updates which blocks in the grid are active/full
@@ -188,16 +290,63 @@ public class Grid {
     return type;
   }
 
-  //map the types to their respective colors
-  void fillTypeColors() {
-    colorMap.put("Air", new Color(0, 0, 0, 0));
-    colorMap.put("Fire", new Color(235, 64, 52));
-    colorMap.put("Water", new Color(66, 135, 245));
-    colorMap.put("Plant", new Color(50, 168, 82));
-    colorMap.put("Lava", new Color(214, 111, 32));
-    colorMap.put("Ice", new Color(150, 183, 235));
-    colorMap.put("Stone", new Color(112, 112, 112));
-    colorMap.put("Charcoal", new Color(43, 43, 43));
+  //swaps the two particles in the grid
+  public void swapParticles(Particle p1, Particle p2) 
+  {
+    //swap indices in the particle grid
+    Point temp = p1.getIndices();
+    p1.setIndices(p2.getIndices());
+    p2.setIndices(temp);
+
+    //put into new positions
+    particleGrid[p1.getIndices().x][p1.getIndices().y] = p1;
+    particleGrid[p2.getIndices().x][p2.getIndices().y] = p2;
+
+    //swap indices in the particle list
+    int temp2 = p1.listIndex;
+    p1.listIndex = p2.listIndex;
+    p2.listIndex = temp2;
+
+    //put into new positions
+    particleList.set(p1.listIndex, p1);
+    particleList.set(p2.listIndex, p2);
+
+    //wake each particle
+    p1.wake();
+    p2.wake();
+
+    //wakes each particle's neighbors
+    p1.wakeNeighbors();
+    p2.wakeNeighbors();
+    
+    //mark both particles as fresh
+    p1.fresh = true;
+    p2.fresh = true;
+  }
+
+  //replaces the first particle with the second particle (p2 will exist where p1 did)
+  public void replaceParticle(Particle p1, Particle p2)
+  {
+    //update p2's coordinates
+    p2.setIndices(p1.getIndices());
+
+    //puts the second particle into the grid
+    particleGrid[p1.getIndices().x][p1.getIndices().y] = p2;
+
+    //update p2's position in the particle list
+    p2.listIndex = p1.listIndex;
+
+    //puts the second particle into the particle list
+    particleList.set(p2.listIndex, p2);
+
+    //wake the new particle (possibly redundant)
+    p2.wake();
+
+    //wake the new particle's neighbors
+    p2.wakeNeighbors();
+
+    //mark the new particle as fresh (possibly redundant)
+    p2.fresh = true;
   }
 
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
@@ -253,7 +402,9 @@ public class Grid {
         if (!p.type.equals("Air")) {
           //increment the number of particles and set the particle to air
           numParticles++;
-          p.setType("Air");
+
+          //replace that particle with a new air particle
+          grid.replaceParticle(p, particleFactory.generateParticle("Air", p.type, p.getIndices()));
         }
       }
     }
@@ -267,24 +418,20 @@ public class Grid {
     //does not bother with row 0 because there is nothing to lower into that row
     for (int y = row; y > 0; y--) {
 
-      //copy the above row into this row and clear the above row
+      //swap this row with the row above it
       for (int px = 0; px < gridWidth * particlesPerEdge; px++) {
         for (int py = y * particlesPerEdge; py < y * particlesPerEdge + particlesPerEdge; py++) {
           //copy above row to lower
           Particle above = particleGrid[px][py - particlesPerEdge];
           Particle curr = particleGrid[px][py];
 
-          String aboveType = above.type;
-          int aboveFuel = above.fuel;
-
-          above.setType(curr.type);
-          above.fuel = curr.fuel;
-
-          curr.setType(aboveType);
-          curr.fuel = aboveFuel;
+          grid.swapParticles(above, curr);
         }
       }
     }
+
+    //alert the main project that a row was cleared
+    rowWasCleared();
   }
 
 
@@ -320,7 +467,10 @@ public class Grid {
       }
       tetromino.offsetY *= -1;
 
-      if (tetromino.collision(0, 0)) {
+      //if the new piece is colliding with any particles
+      if (tetromino.collision(0, 0)) 
+      {
+        //lose the game
         lose();
       }
     }
@@ -334,6 +484,15 @@ public class Grid {
     queue[1] = queue[2];
     queue[2] = new Tetromino();
 
+
+    //if the new tetromino is colliding with a particle
+    if (tetromino.collision(0, 0))
+    {
+      //lose the game
+      lose();
+    }
+
+    //update whether the current piece was swapped
     swapped = false;
   }
 
@@ -379,24 +538,12 @@ public class Grid {
     }
 
     //render the particles
-    //for (int x = 0; x < gridWidth * particlesPerEdge; x++) {
-    //  for (int y = 0; y < gridHeight * particlesPerEdge; y++) {
-    //    Particle particle = grid.particleGrid[x][y];
-    //    if (particle != null) {
-    //      fill(particle.colour);
-    //      rect(x * particleWidth + cornerX, y * particleWidth + cornerY, particleWidth, particleWidth);
-    //    }
-    //  }
-    //}
-    for (int lcv = 0; lcv < particleList.size(); lcv++) {
-      particleList.get(lcv).render();
-      //if (particleList.get(lcv).type.equals("Air")) {
-      // particleList.remove(lcv);
-      //}
-
-      //Particle particle = particleList.get(lcv);
-      //fill(particle.colour);
-      //rect(particle.x, particle.y, particleWidth, particleWidth);
+    for (Particle[] line : particleGrid)
+    {
+      for (Particle particle : line)
+      {
+        particle.render();
+      }
     }
 
     //draw grid border
@@ -517,16 +664,10 @@ public class Grid {
     }
 
     //render the score
-    textSize(25);
-    fill(255, 255, 255);
-    float textX = grid.cornerX - blockWidth * 7;
-    float textY = grid.cornerY - blockWidth / 2;
+    drawTextWithBorder("Score: " + score, grid.cornerX - blockWidth * 7, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));
 
-    for (int x = -1; x < 2; x++) {
-      text("Score: " + score, textX + x, textY);
-      text("Score: " + score, textX, textY + x);
-    }
-    fill(0, 0, 0);
-    text("Score: " + score, textX, textY);
+    //render the level counter/progress
+    drawTextWithBorder("Level: " + level, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth * 1.25, 25, new Color(255, 255, 255), new Color(0, 0, 0));
+    drawTextWithBorder("Row " + numClearedRows + "/" + rowsPerLevel, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));
   }
 }

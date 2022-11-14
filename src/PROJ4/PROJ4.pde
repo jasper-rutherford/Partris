@@ -22,19 +22,40 @@ int particlesPerEdge = 10;
 int particlesPerBlock = particlesPerEdge * particlesPerEdge;
 float particleWidth = blockWidth / float(particlesPerEdge);
 
-float fullFactor = 2.0/3;
+float fullFactor = 3.0/5;
 
 //how long in milliseconds that a block takes to fall one row
-float baseBlockTime = 1000;
-float blockTime = baseBlockTime;
-float baseParticleTicksPerSecond = 30.0;
+// float baseBlockTime = 1000;
+// float blockTime = baseBlockTime;
+// float baseParticleTicksPerSecond = 30.0;
 
-long oldDropTime;
-long oldParticleTime;
-long startTime;
-int particleUpdate;
+//////////////////
+int level = 0;
+int numClearedRows = 0;
+int rowsPerLevel = 10;
+float[] levelSpeeds = {48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1};//, 30, 27, 24, 21, 18, 15, 12, 9, 8, 7, 6, 5, 4, 3, 2, 1};//{24, 22, 19, 17, 14, 12, 9, 7, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1}; //represents how many ticks per block drop  
 
-int baseFuel = 500;
+float ticksPerSecond = 60.0;
+float ticksPerBlockDrop = levelSpeeds[0];
+float particleUpdatesPerBlockDrop = 30.0;
+
+double nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
+double nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
+
+double blockDropsDueForCompletion = 0;
+double particleUpdatesDueForCompletion = 0;
+
+long prevTime = System.nanoTime();
+
+// long oldDropTime;
+// long oldParticleTime;
+// long startTime;
+// int particleUpdate;
+
+
+
+
+ParticleFactory particleFactory;
 
 Grid grid;
 
@@ -52,11 +73,11 @@ boolean numRowFunc = false;
 boolean paused = false;
 boolean lost;
 
-long lastTime = System.nanoTime();
-double amountOfTicks = baseParticleTicksPerSecond;
-double ns = 1000000000 / amountOfTicks;
-double delta = 0;
-long timer = System.currentTimeMillis(); 
+// long lastTime = System.nanoTime();
+// double amountOfTicks = baseParticleTicksPerSecond;
+// double ns = 1000000000 / amountOfTicks;
+// double delta = 0;
+// long timer = System.currentTimeMillis(); 
 
 ArrayList<String> allTypes;
 
@@ -68,27 +89,36 @@ void setup() {
   surface.setTitle("Partris");
   lost = false;
 
+  //create the particle factory
+  particleFactory = new ParticleFactory();
+
+  println("test1");
+
   //fill the template array with all piece shapes and rotations
   fillTemplates();
 
+  //not including air because this is used to decide what type a tetromino can be
   allTypes = new ArrayList<String>();
-  allTypes.add("Fire");
-  allTypes.add("Water");
-  allTypes.add("Plant");
-  allTypes.add("Lava");
-  allTypes.add("Ice");
-  allTypes.add("Stone");
+  allTypes.add("Acid");
   allTypes.add("Charcoal");
+  allTypes.add("Fire");
+  allTypes.add("Ice");
+  allTypes.add("Lava");
+  allTypes.add("Plant");
+  allTypes.add("Stone");
+  allTypes.add("Water");
 
   //build the grid
   grid = new Grid();
   grid.setupParticleStuff();
+  println("setup particle stuff");
+
   grid.setupTetrominos();
 
+  println("setup tetrominos");
+
   //set oldTimes to the current time
-  oldDropTime = System.currentTimeMillis();
-  oldParticleTime = System.currentTimeMillis();
-  startTime = System.currentTimeMillis();
+  prevTime = System.nanoTime();
 
   if (konami.size() == 0) {
     //setup konami
@@ -114,6 +144,8 @@ void setup() {
     konami.add(65);
   }
   score = 0;
+  println("test2");
+
 }
 
 void lose() {
@@ -137,35 +169,77 @@ void lose() {
   }
 }
 
-void draw() {
-  long now = System.nanoTime();
-  delta += (now - lastTime) / ns;
-  lastTime = now;
-  while (delta >= 1)
+void rowWasCleared()
+{
+  //increment number of cleared rows
+  numClearedRows++;
+
+  //check if level was cleared
+  if (numClearedRows % rowsPerLevel == 0)
   {
-    if (!paused && autoParticle && !lost) {
-      grid.updateParticles();
-    }
-    delta--;
+    //advance to next level
+    nextLevel();
   }
-  long currTime = System.currentTimeMillis();
 
-  if (!lost && !paused) {
-    //speed up the blockTime over time
-    //blocktime is roughly equal to 1000 times .80 ^ the number of minutes since the game began
-    blockTime = 1000 * pow(0.80, (currTime - startTime) / 60000.0);
+  //print level update
+  println("~~~~~~~~~~~");
+  println("Level " + level);
+  println("Rows remaining: " + (rowsPerLevel - numClearedRows));
+  println("~~~~~~~~~~~");
+}
 
+void nextLevel()
+{
+  //reset number of cleared rows
+  numClearedRows = 0;
 
-    amountOfTicks = baseParticleTicksPerSecond * baseBlockTime / blockTime;
-    // ns = 1000000000 / amountOfTicks;
-  } 
+  //update level counter
+  level++;
 
-  //lower the block once a second (TODO: make this speed up over time)
-  if (!paused && !lost && currTime - oldDropTime >= blockTime) {
-    oldDropTime = currTime;
+  //speed up the game
+  if (level < levelSpeeds.length)
+  {
+    ticksPerBlockDrop = levelSpeeds[level];
 
-    if (autoFall) {
-      grid.tetromino.down();
+    nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
+    nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
+  }
+}
+
+void draw() 
+{
+  //update/calculate how much time has passed
+  long currentTime = System.nanoTime();
+  long difference = currentTime - prevTime;
+  prevTime = currentTime;
+    
+  if (!lost && !paused)
+  {
+    //calculate how many things should have happened during that time
+    blockDropsDueForCompletion += difference / nanosPerBlockDrop;
+    particleUpdatesDueForCompletion += difference / nanosPerParticleUpdate;
+
+    //update particles
+    while (particleUpdatesDueForCompletion >= 1)
+    {
+      //render particles once per tick
+      if (autoParticle) 
+      {
+        grid.updateParticles();
+      }
+
+      particleUpdatesDueForCompletion--;
+    }
+
+    //update block drops
+    while (blockDropsDueForCompletion >= 1)
+    {
+      if (autoFall) 
+      {
+        grid.tetromino.down();
+      }
+
+      blockDropsDueForCompletion--;
     }
   }
 
@@ -174,16 +248,7 @@ void draw() {
 
 
   if (paused) {
-    textSize(150);
-    fill(0, 0, 0);
-    float textX = width / 2 - blockWidth * 8.5;
-    float textY = height / 2 - blockWidth * 0;
-    for (int x = -1; x < 2; x++) {
-      text("Paused", textX + x, textY);
-      text("Paused", textX, textY + x);
-    }
-    fill(248, 255, 48);
-    text("Paused", textX, textY);
+    drawTextWithBorder("Paused", width / 2 - blockWidth * 8.5, height / 2 - blockWidth * 0, 150, new Color(248, 255, 48), new Color(0, 0, 0));
   }
 }    
 
@@ -223,6 +288,12 @@ void keyPressed() {
     autoFall = !autoFall;
     println("toggled autoFall", autoFall);
   }
+  
+  //, toggles whether the game is lost (if debug mode is enabled)
+  if (debug && (key == ',')) {
+    lost = !lost;
+    println("toggled lose", lost);
+  }
 
   //x toggles whether particles update automatically (if debug mode is enabled)
   if (debug && (key == 'x' || key == 'X')) {
@@ -238,6 +309,12 @@ void keyPressed() {
   if (debug && (key == 'a' || key == 'A')) {
     alphaSleep = !alphaSleep;
     println("toggled alphaSleep", alphaSleep);
+  }
+  //s reshuffles the particlelist (if debug mode is enabled)
+  if (debug && (key == 's' || key == 'S'))
+  {
+    println("shuffling particlelist", autoFall);
+    grid.shuffleParticleList();
   }
 
   //` toggles the functionality of the number row (if debug mode is enabled)
@@ -309,7 +386,7 @@ void keyPressed() {
   if (((!lost && !paused) || debug) && key == ' ') {
     grid.tetromino.slam(true);
     //set oldTime to the current time
-    oldDropTime = System.currentTimeMillis();
+    prevTime = System.nanoTime();
   }
 
   //rotates the tetromino 90 degrees clockwise (doesn't work if paused or lost (unless in debug mode))
@@ -328,10 +405,27 @@ void keyPressed() {
   if (((!lost && !paused) || debug) && keyCode == DOWN) {
     grid.tetromino.down();
     //set oldTime to the current time
-    oldDropTime = System.currentTimeMillis();
+    prevTime = System.nanoTime();
   }
 
   konamiCheck(keyCode);
+}
+
+//draws the provided text with a border around it
+void drawTextWithBorder(String text, float topLeftCornerX, float topLeftCornerY, int textSize, Color fillColor, Color borderColor)
+{
+  //render the score
+    textSize(textSize);
+    fill(borderColor);
+
+    for (int x = -1; x < 2; x++) 
+    {
+      text(text, topLeftCornerX + x, topLeftCornerY);
+      text(text, topLeftCornerX, topLeftCornerY + x);
+    }
+
+    fill(fillColor);
+    text(text, topLeftCornerX, topLeftCornerY);
 }
 
 void konamiCheck(int code) {
@@ -354,20 +448,6 @@ void konamiCheck(int code) {
 void fill(Color colour) {
   fill(colour.r, colour.g, colour.b, colour.a);
 }
-
-//randomizes the order of all the particles in the particleList
-void shuffleParticles() {
-  ArrayList<Particle> pList = grid.particleList;
-  ArrayList<Particle> temp = new ArrayList<Particle>();
-  int size = pList.size();
-  for (int lcv = 0; lcv < size; lcv++) {
-    int index = int(random(0, pList.size()));
-    temp.add(pList.get(index));
-    pList.remove(index);
-  }
-  grid.particleList = temp;
-}
-
 
 /*
   Sets up the tetromino templates
