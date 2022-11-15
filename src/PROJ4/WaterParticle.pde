@@ -105,6 +105,7 @@ public class WaterParticle extends Particle
     //check half adjacents
     for (Particle adj : halfAdjacents) 
     {
+      //interact water with lava
       if (adj.type.equals("Lava")) 
       {
         //place a new stone particle where the lava was

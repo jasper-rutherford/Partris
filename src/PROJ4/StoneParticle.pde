@@ -56,7 +56,7 @@ public class StoneParticle extends Particle
       if (openSpaces.size() == 0)
       {
         //check down square for water or lava
-        if (down.type.equals("Water") || down.type.equals("Lava")) 
+        if (down.type.equals("Water") || down.type.equals("Lava") || down.type.equals("Acid")) 
         {
           //add to list of open spaces
           openSpaces.add(down);
@@ -69,13 +69,13 @@ public class StoneParticle extends Particle
         //check diagonals for water or lava
 
         //check left diagonal for water or lava
-        if (downLeft != null && (downLeft.type.equals("Water") || downLeft.type.equals("Lava"))) 
+        if (downLeft != null && (downLeft.type.equals("Water") || downLeft.type.equals("Lava") || downLeft.type.equals("Acid"))) 
         {
           //add to list of open spaces
           openSpaces.add(downLeft);
         }
         //check right diagonal for water or lava
-        if (downRight != null && (downRight.type.equals("Water") || downRight.type.equals("Lava"))) 
+        if (downRight != null && (downRight.type.equals("Water") || downRight.type.equals("Lava") || downRight.type.equals("Acid"))) 
         {
           //add to list of open spaces
           openSpaces.add(downRight);

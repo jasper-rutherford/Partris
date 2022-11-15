@@ -28,8 +28,8 @@ public class AcidParticle extends Particle
     //if that particle is not null
     if (down != null) 
     {
-      //if the particle below this one is not acid
-      if (!down.type.equals("Acid")) 
+      //if the particle below this one is not acid or stone
+      if (!down.type.equals("Acid") && !down.type.equals("Stone")) 
       {
         //add that particle to the list of spaces to move into
         openSpaces.add(down);
@@ -45,14 +45,14 @@ public class AcidParticle extends Particle
         Particle downRight = down.adjacentRight();
 
         //check the left diagonal for non-acid
-        if (downLeft != null && !downLeft.type.equals("Acid")) 
+        if (downLeft != null && !downLeft.type.equals("Acid") && !downLeft.type.equals("Stone")) 
         {
           //add that particle to the list of spaces to move into
           openSpaces.add(downLeft);
         }
 
         //check the right diagonal for non-acid
-        if (downRight != null && !downRight.type.equals("Acid")) 
+        if (downRight != null && !downRight.type.equals("Acid") && !downRight.type.equals("Stone")) 
         {
           //add that particle to the list of spaces to move into
           openSpaces.add(downRight);
@@ -70,14 +70,14 @@ public class AcidParticle extends Particle
       Particle right = adjacentRight();
 
       //check the left neighbor for non-acid
-      if (left != null && !left.type.equals("Acid")) 
+      if (left != null && !left.type.equals("Acid") && !left.type.equals("Stone")) 
       {
         //add to the list of spaces to move into
         openSpaces.add(left);
       }
 
       //check the right neighbor for non-acid
-      if (right != null && !right.type.equals("Acid")) 
+      if (right != null && !right.type.equals("Acid") && !right.type.equals("Stone")) 
       {
         //add to the list of spaces to move into
         openSpaces.add(right);
@@ -108,7 +108,7 @@ public class AcidParticle extends Particle
   public Particle dissolve(Particle particle)
   {
     //if the particle is not air (air doesnt dissolve)
-    if (!particle.type.equals("Air"))
+    if (!particle.type.equals("Air") && !particle.type.equals("Stone"))
     {
       //create a new air particle
       Particle air = particleFactory.generateParticle("Air", particle.type, particle.indices);

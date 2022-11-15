@@ -30,7 +30,7 @@ float fullFactor = 3.0/5;
 // float baseParticleTicksPerSecond = 30.0;
 
 //////////////////
-int level = 0;
+int level;
 int numClearedRows = 0;
 int rowsPerLevel = 10;
 float[] levelSpeeds = {48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1};//, 30, 27, 24, 21, 18, 15, 12, 9, 8, 7, 6, 5, 4, 3, 2, 1};//{24, 22, 19, 17, 14, 12, 9, 7, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1}; //represents how many ticks per block drop  
@@ -146,6 +146,8 @@ void setup() {
   score = 0;
   println("test2");
 
+
+  setLevel(0);
 }
 
 void lose() {
@@ -178,7 +180,7 @@ void rowWasCleared()
   if (numClearedRows % rowsPerLevel == 0)
   {
     //advance to next level
-    nextLevel();
+    setLevel(level + 1);
   }
 
   //print level update
@@ -188,22 +190,26 @@ void rowWasCleared()
   println("~~~~~~~~~~~");
 }
 
-void nextLevel()
+void setLevel(int level)
 {
   //reset number of cleared rows
   numClearedRows = 0;
 
   //update level counter
-  level++;
+  this.level = level;
 
-  //speed up the game
+  //set game speed
   if (level < levelSpeeds.length)
   {
     ticksPerBlockDrop = levelSpeeds[level];
-
-    nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
-    nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
   }
+  else
+  {
+    ticksPerBlockDrop = levelSpeeds[levelSpeeds.length - 1];
+  }
+
+  nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
+  nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
 }
 
 void draw() 

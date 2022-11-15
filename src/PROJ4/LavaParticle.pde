@@ -210,6 +210,18 @@ public class LavaParticle extends Particle
         //mark that this particle interacted with something
         interacted = true;
       }
+      // //interact lava with stone
+      // else if (adj.type.equals("Stone"))
+      // {
+      //   //create a new lava particle
+      //   Particle lava = particleFactory.generateParticle("Lava", "Stone", adj.getIndices());
+
+      //   //replace the stone with the lava
+      //   grid.replaceParticle(adj, lava);
+
+      //   //mark that this particle interacted with something
+      //   interacted = true;
+      // }
     }
   }
 }
