@@ -2,6 +2,7 @@ public class PlantParticle extends Particle
 {
   //this particle's color
   private Color uniqueColor = new Color(50, 168, 82);
+  private int fuel = -1;
 
   public PlantParticle(Point indices, String prevType)
   {
@@ -51,7 +52,7 @@ public class PlantParticle extends Particle
         if (growable) 
         {
           //place a new plant particle where the air was
-          grid.replaceParticle(adj, particleFactory.generateParticle("Plant", "Air", adj.getIndices()));
+          grid.replaceParticle(adj, "Plant");
 
           //marks this particle as interacted
           interacted = true;

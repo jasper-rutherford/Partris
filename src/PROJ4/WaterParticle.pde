@@ -109,10 +109,10 @@ public class WaterParticle extends Particle
       if (adj.type.equals("Lava")) 
       {
         //place a new stone particle where the lava was
-        grid.replaceParticle(adj, particleFactory.generateParticle("Stone", "Lava", adj.getIndices()));
+        grid.replaceParticle(adj, "Stone");
         
         //place a new stone particle where this water was
-        grid.replaceParticle(this, particleFactory.generateParticle("Stone", "Water", this.getIndices()));
+        grid.replaceParticle(this, "Stone");
 
         //marks this particle as interacted
         interacted = true;

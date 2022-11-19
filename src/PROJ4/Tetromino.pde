@@ -265,11 +265,8 @@ public class Tetromino {
           //get the particle currently in this position
           Particle oldParticle = grid.particleGrid[xIndex][yIndex];
 
-          //generate a new particle 
-          Particle newParticle = particleFactory.generateParticle(type, oldParticle.type, new Point(xIndex, yIndex));
-
-          //replace the old particle with the new particle
-          grid.replaceParticle(oldParticle, newParticle);
+          //replace the old particle with a new particle
+          grid.replaceParticle(oldParticle, type);
         }
       }
     }

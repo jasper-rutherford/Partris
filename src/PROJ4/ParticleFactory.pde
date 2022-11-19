@@ -7,52 +7,87 @@ public class ParticleFactory
 
     }
 
-    public Particle generateParticle(String type, String prevType, Point indices)
+    public Particle generateParticle(String type, Particle prevParticle)
     {
         //generate an air particle
         if (type.equals("Air"))
         {
-            return new AirParticle(indices, prevType);
+            return new AirParticle(prevParticle.indices, prevParticle.type);
         }
         //generate an acid particle
-        if (type.equals("Acid"))
+        else if (type.equals("Acid"))
         {
-            return new AcidParticle(indices, prevType);
+            return new AcidParticle(prevParticle.indices, prevParticle.type);
         }
         //generate a charcoal particle
         else if (type.equals("Charcoal"))
         {
-            return new CharcoalParticle(indices, prevType);
+            CharcoalParticle charcoal = new CharcoalParticle(prevParticle.indices, prevParticle.type);
+            
+            //conserve fuel
+            if (prevParticle instanceof FireParticle)
+            {
+                FireParticle fire = (FireParticle)prevParticle;
+                charcoal.fuel = fire.fuel; 
+            }
+
+            return charcoal;
         }
         //generate a fire particle
         else if (type.equals("Fire"))
         {
-            return new FireParticle(indices, prevType);
+            FireParticle fire = new FireParticle(prevParticle.indices, prevParticle.type);
+
+            //conserve fuel
+            if (prevParticle instanceof PlantParticle && ((PlantParticle)prevParticle).fuel != -1)
+            {
+                fire.fuel = ((PlantParticle)prevParticle).fuel;
+            }
+            else if (prevParticle instanceof CharcoalParticle && ((CharcoalParticle)prevParticle).fuel != -1)
+            {
+                fire.fuel = ((CharcoalParticle)prevParticle).fuel;
+            }
+
+            return fire;
+        }
+        //generate a goop particle
+        else if (type.equals("Goop"))
+        {
+            return new GoopParticle(prevParticle.indices, prevParticle.type);
         }
         //generate a ice particle
         else if (type.equals("Ice"))
         {
-            return new IceParticle(indices, prevType);
+            return new IceParticle(prevParticle.indices, prevParticle.type);
         }
         //generate a lava particle
         else if (type.equals("Lava"))
         {
-            return new LavaParticle(indices, prevType);
+            return new LavaParticle(prevParticle.indices, prevParticle.type);
         }
         //generate a plant particle
         else if (type.equals("Plant"))
         {
-            return new PlantParticle(indices, prevType);
+            PlantParticle plant = new PlantParticle(prevParticle.indices, prevParticle.type);
+
+            //conserve fuel
+            if (prevParticle instanceof FireParticle)
+            {
+                FireParticle fire = (FireParticle)prevParticle;
+                plant.fuel = fire.fuel; 
+            }
+
+            return plant;
         }
         //generate a stone particle
         else if (type.equals("Stone"))
         {
-            return new StoneParticle(indices, prevType);
+            return new StoneParticle(prevParticle.indices, prevParticle.type);
         }
         //generate a water particle
         else if (type.equals("Water"))
         {
-            return new WaterParticle(indices, prevType);
+            return new WaterParticle(prevParticle.indices, prevParticle.type);
         }
 
         //invalid type, returns null
@@ -63,9 +98,17 @@ public class ParticleFactory
         }
     }
 
-    //gets the color of a particle by type
+    //generates an air particle with a previous type which is also air
+    public Particle generateAirParticle(Point indices)
+    {
+        return new AirParticle(indices, "Air");
+    }
+
+    //gets the color of a particle by type 
+    //yes this is dumb
     public Color getColour(String type)
     {
-        return generateParticle(type, type, new Point(0,0)).colour;
+        println("getting color of " + type);
+        return generateParticle(type, generateAirParticle(new Point(0,0))).colour;
     }
 }

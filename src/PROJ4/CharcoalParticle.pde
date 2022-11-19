@@ -2,6 +2,7 @@ public class CharcoalParticle extends Particle
 {
   //this particle's color
   private Color uniqueColor = new Color(43, 43, 43);
+  private int fuel = -1;
 
   public CharcoalParticle(Point indices, String prevType)
   {

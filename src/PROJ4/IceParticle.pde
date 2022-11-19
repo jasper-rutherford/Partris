@@ -26,7 +26,7 @@ public class IceParticle extends Particle
       if (adj.type.equals("Water")) 
       {
         //replace that water with a new ice particle
-        grid.replaceParticle(adj, particleFactory.generateParticle("Ice", "Water", adj.getIndices()));
+        grid.replaceParticle(adj, "Ice");
 
         //mark that this particle interacted
         interacted = true;

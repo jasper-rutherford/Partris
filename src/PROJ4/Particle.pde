@@ -43,7 +43,7 @@ public class Particle {
 
     //set types
     this.type = type;
-    this.prevType = type;
+    this.prevType = prevType;
 
     //set colour
     this.colour = new Color(100, 100, 100);
@@ -145,6 +145,16 @@ public class Particle {
       }
       strokeWeight(1);
     }
+
+    //render number of wide neighbors
+    if (renderParticleWideNeighbors)
+    {
+      int numWideNeighbors = wideNeighbors(3).size();
+
+      fill(new Color(255, 255, 255));
+      textSize(10);
+      text(numWideNeighbors, x + particleWidth / 2, y + particleWidth * .75);
+    }
   }
 
   //tries to move this particle
@@ -238,6 +248,58 @@ public class Particle {
     } 
 
     return adjacents;
+  }
+
+  //returns all particles within range of this particle
+  //like, a square with a side length of range * 2 + 1
+  //so range 1 -> 3x3 square centered around this particle
+  // range 2 -> 5x5 square etc
+  public ArrayList<Particle> wideNeighbors(int range)
+  {
+    ArrayList<Particle> line = new ArrayList<Particle>();
+
+    line.add(this);
+    Particle left = adjacentLeft();
+    Particle right = adjacentRight();
+
+    for (int lcv = 0; lcv < range; lcv++)
+    {
+      if (left != null)
+      {
+        line.add(left);
+        left = left.adjacentLeft();
+      }
+
+      if (right != null)
+      {
+        line.add(right);
+        right = right.adjacentRight();
+      }
+    }
+
+    ArrayList<Particle> out = new ArrayList<Particle>(line);
+    for (Particle p : line)
+    {
+      Particle up = p.adjacentUp();
+      Particle down = p.adjacentDown();
+      for (int lcv = 0; lcv < range; lcv++)
+      {
+        if (up != null)
+        {
+          out.add(up);
+          up = up.adjacentUp();
+        }
+
+        if (down != null)
+        {
+          out.add(down);
+          down = down.adjacentDown();
+        }
+      }
+    }
+
+    out.remove(this);
+    return out;
   }
 
   public void interact() 

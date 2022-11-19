@@ -85,7 +85,7 @@ public class Grid {
       for (int y = 0; y < gridHeight * particlesPerEdge; y++) 
       {
         //create a new particle 
-        Particle particle = particleFactory.generateParticle("Air", "Air", new Point(x, y));
+        Particle particle = particleFactory.generateAirParticle(new Point(x, y));
 
         //add particle to grid
         particleGrid[x][y] = particle;
@@ -280,8 +280,6 @@ public class Grid {
   public String pickType() {
     if (types.size() == 0) {
       fillTypes();
-      for (int lcv = 0; lcv < types.size(); lcv++) {
-      }
     }
 
     int index = int(random(0, types.size()));
@@ -349,6 +347,16 @@ public class Grid {
     p2.fresh = true;
   }
 
+  //replaces the provided particle with a particle of the provided type
+  public void replaceParticle(Particle oldParticle, String newType)
+  {
+    //create new particle
+    Particle newParticle = particleFactory.generateParticle(newType, oldParticle);
+
+    //replace the old particle with the new particle
+    replaceParticle(oldParticle, newParticle);
+  }
+
   //sets up the tetrominos. Used immediately after grid is constructed. Cannot just be part of the constructor because tetrominos need to access grid's blocks and I don't want to send them into tetromino's constructor every time.
   void setupTetrominos() {
     //build the initial current tetromino
@@ -404,7 +412,7 @@ public class Grid {
           numParticles++;
 
           //replace that particle with a new air particle
-          grid.replaceParticle(p, particleFactory.generateParticle("Air", p.type, p.getIndices()));
+          grid.replaceParticle(p, "Air");
         }
       }
     }
@@ -496,7 +504,11 @@ public class Grid {
     swapped = false;
   }
 
-  void render() {
+  void render() 
+  {
+    //render drop speed
+    drawTextWithBorder("BPS: " + (ticksPerSecond / ticksPerBlockDrop ), grid.cornerX - blockWidth * 6, grid.cornerY + blockWidth * 7, 20, new Color(255, 255, 255), new Color(0, 0, 0));
+
     //draw rectangle background
     fill(200, 200, 200);
     rect(cornerX, cornerY, totWidth, totHeight);
@@ -511,12 +523,6 @@ public class Grid {
 
     //render the falling tetromino
     tetromino.render(true);
-
-    ////draw box for tetromino's particle's type
-    // fill(120, 120, 120);
-    // strokeWeight(4);
-    // rect(cornerX, cornerY - blockWidth * 3, blockWidth * 10, blockWidth * 3);
-    //strokeWeight(1);
 
     //draw the ghost block if enabled
     if (ghostBlock) {
@@ -668,6 +674,6 @@ public class Grid {
 
     //render the level counter/progress
     drawTextWithBorder("Level: " + level, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth * 1.25, 25, new Color(255, 255, 255), new Color(0, 0, 0));
-    drawTextWithBorder("Row " + numClearedRows + "/" + rowsPerLevel, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));
+    drawTextWithBorder("Row " + numClearedRows + "/" + rowsPerLevel, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));    
   }
 }

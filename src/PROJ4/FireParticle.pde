@@ -32,7 +32,7 @@ public class FireParticle extends Particle
     if (fuel <= 0) 
     {
       //replace this particle with a new air particle
-      grid.replaceParticle(this, particleFactory.generateParticle("Air", "Fire", getIndices()));
+      grid.replaceParticle(this, "Air");
     }
 
     //mark that this particle moved
@@ -64,11 +64,9 @@ public class FireParticle extends Particle
     //if this fire has no air access
     if (!hasAir) 
     {
-      //create a new particle of type prevType - TODO: this does not conserve fuel. 
-      Particle oldParticle = particleFactory.generateParticle(prevType, "Fire", getIndices());
-
-      //replace this particle with the old particle
-      grid.replaceParticle(this, oldParticle);
+      println("extinguishing - " + prevType);
+      //replace this particle with a particle of prevType
+      grid.replaceParticle(this, prevType);
 
       //mark that this particle interacted
       interacted = true;
@@ -106,7 +104,7 @@ public class FireParticle extends Particle
           if (airAccess)
           {
             //replace the plant with a new fire particle
-            grid.replaceParticle(adj, particleFactory.generateParticle("Fire", "Plant", adj.getIndices()));
+            grid.replaceParticle(adj, "Fire");
 
             //mark that this fire interacted with something
             interacted = true;
@@ -139,7 +137,7 @@ public class FireParticle extends Particle
           if (airAccess)
           {
             //replace the char with a new fire particle
-            grid.replaceParticle(adj, particleFactory.generateParticle("Fire", "Charcoal", adj.getIndices()));
+            grid.replaceParticle(adj, "Fire");
 
             //mark that this fire interacted with something
             interacted = true;
@@ -149,7 +147,7 @@ public class FireParticle extends Particle
         else if (adj.type.equals("Ice")) 
         {
           //replace ice particle with new water particle
-          grid.replaceParticle(adj, particleFactory.generateParticle("Water", "Ice", adj.getIndices()));
+          grid.replaceParticle(adj, "Water");
 
           //mark that this fire interacted with something
           interacted = true;

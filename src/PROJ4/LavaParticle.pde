@@ -107,10 +107,10 @@ public class LavaParticle extends Particle
       if (adj.type.equals("Water")) 
       {
         //place a new stone particle where the water was
-        grid.replaceParticle(adj, particleFactory.generateParticle("Stone", "Water", adj.getIndices()));
+        grid.replaceParticle(adj, "Stone");
         
         //place a new stone particle where this lava was
-        grid.replaceParticle(this, particleFactory.generateParticle("Stone", "Lava", this.getIndices()));
+        grid.replaceParticle(this, "Stone");
 
         //marks this particle as interacted
         interacted = true;
@@ -143,20 +143,14 @@ public class LavaParticle extends Particle
         //if the plant has air fully adjacent
         if (hasAir) 
         {
-          //create a fire particle
-          Particle fire = particleFactory.generateParticle("Fire", "Plant", adj.getIndices());
-
-          //replace the plant with the fire particle
-          grid.replaceParticle(adj, fire);
+          //replace the plant with a fire particle
+          grid.replaceParticle(adj, "Fire");
         }
         //if the plant has no air
         else 
         {
-          //create a charcoal particle
-          Particle charcoal = particleFactory.generateParticle("Charcoal", "Plant", adj.getIndices());
-         
-          //replace the plant with the charcoal particle
-          grid.replaceParticle(adj, charcoal);
+          //replace the plant with a charcoal particle
+          grid.replaceParticle(adj, "Charcoal");
         }
 
         //mark that this particle interacted with something
@@ -188,11 +182,8 @@ public class LavaParticle extends Particle
         //if the char has air fully adjacent
         if (hasAir) 
         {
-          //create a fire particle
-          Particle fire = particleFactory.generateParticle("Fire", "Charcoal", adj.getIndices());
-
-          //replace the plant with the fire particle
-          grid.replaceParticle(adj, fire);
+          //replace the plant with a fire particle
+          grid.replaceParticle(adj, "Fire");
         }
 
         //mark that this particle interacted with something
@@ -201,11 +192,8 @@ public class LavaParticle extends Particle
       //interact lava with ice
       else if (adj.type.equals("Ice")) 
       {
-        //create a water particle
-        Particle water = particleFactory.generateParticle("Water", "Ice", adj.getIndices());
-
-        //replace the ice with the water particle
-        grid.replaceParticle(adj, water);
+        //replace the ice with a water particle
+        grid.replaceParticle(adj, "Water");
 
         //mark that this particle interacted with something
         interacted = true;
@@ -213,11 +201,8 @@ public class LavaParticle extends Particle
       // //interact lava with stone
       // else if (adj.type.equals("Stone"))
       // {
-      //   //create a new lava particle
-      //   Particle lava = particleFactory.generateParticle("Lava", "Stone", adj.getIndices());
-
-      //   //replace the stone with the lava
-      //   grid.replaceParticle(adj, lava);
+      //   //replace the stone with a lava particle
+      //   grid.replaceParticle(adj, "Lava");
 
       //   //mark that this particle interacted with something
       //   interacted = true;

@@ -111,9 +111,9 @@ public class AcidParticle extends Particle
     if (!particle.type.equals("Air") && !particle.type.equals("Stone"))
     {
       //create a new air particle
-      Particle air = particleFactory.generateParticle("Air", particle.type, particle.indices);
+      Particle air = particleFactory.generateParticle("Air", particle);
 
-      //replace the found particle with the air particle
+      //replace the dissolving particle with the air particle
       grid.replaceParticle(particle, air);
 
       //consume acid health
@@ -122,11 +122,8 @@ public class AcidParticle extends Particle
       //if no more health
       if (health <= 0)
       {
-        //create a new air particle
-        Particle newAir = particleFactory.generateParticle("Air", "Acid", particle.indices);
-
-        //replace this particle with the new air particle
-        grid.replaceParticle(this, newAir);
+        //replace this particle with a new air particle
+        grid.replaceParticle(this, "Air");
       }
 
       //return the air that is in the dissolved spot

@@ -69,6 +69,7 @@ boolean alphaSleep = false;
 boolean autoParticle = true;
 boolean autoFall = true;
 boolean numRowFunc = false;
+boolean renderParticleWideNeighbors = false;
 
 boolean paused = false;
 boolean lost;
@@ -102,6 +103,7 @@ void setup() {
   allTypes.add("Acid");
   allTypes.add("Charcoal");
   allTypes.add("Fire");
+  allTypes.add("Goop");
   allTypes.add("Ice");
   allTypes.add("Lava");
   allTypes.add("Plant");
@@ -261,17 +263,6 @@ void draw()
 //key controls
 void keyPressed() {
 
-  //c holds the current piece
-  if (key == 'c' || key == 'C') {
-    grid.hold();
-  }
-
-  //r restarts
-  if (key == 'r' || key == 'R') {
-    println("restarting");
-    setup();
-  }
-
   //enter advances to next shape (if debug mode is enabled)
   if (debug && key == '\n') {
     grid.tetromino.shape = (grid.tetromino.shape + 1) % 7;
@@ -283,7 +274,19 @@ void keyPressed() {
     grid.tetromino.setType(allTypes.get((index + 1) % allTypes.size()));
     grid.tetromino.copyTemplate();
   }
-
+  //a toggles whether sleeping particles have a border around them (if debug mode is enabled)
+  if (debug && (key == 'a' || key == 'A')) {
+    alphaSleep = !alphaSleep;
+    println("toggled alphaSleep", alphaSleep);
+  }
+  if (debug && (key == 'b' || key == 'B')) {
+    renderParticleWideNeighbors = !renderParticleWideNeighbors;
+    println("toggled render wide particles", renderParticleWideNeighbors);
+  }
+  //c holds the current piece
+  if (key == 'c' || key == 'C') {
+    grid.hold();
+  }
   //d toggles whether rows clear (if debug mode is enabled)
   if (debug && (key == 'd' || key == 'D')) {
     checkingRows = !checkingRows;
@@ -294,13 +297,30 @@ void keyPressed() {
     autoFall = !autoFall;
     println("toggled autoFall", autoFall);
   }
-  
-  //, toggles whether the game is lost (if debug mode is enabled)
-  if (debug && (key == ',')) {
-    lost = !lost;
-    println("toggled lose", lost);
+  // toggles ghostBlock (if debug mode is enabled)
+  if (debug && (key == 'g' || key == 'G')) {
+    grid.ghostBlock = !grid.ghostBlock;
   }
-
+  // L moves the tetromino up (only in debug mode)
+  if (debug && (key == 'l' || key == 'L')) {
+    grid.tetromino.up();
+  }
+  // p pauses everything
+  if (key == 'p' || key == 'P') {
+    paused = !paused;
+    println("toggled pause");
+  }
+  //r restarts
+  if (key == 'r' || key == 'R') {
+    println("restarting");
+    setup();
+  }
+  //s reshuffles the particlelist (if debug mode is enabled)
+  if (debug && (key == 's' || key == 'S'))
+  {
+    println("shuffling particlelist", autoFall);
+    grid.shuffleParticleList();
+  }
   //x toggles whether particles update automatically (if debug mode is enabled)
   if (debug && (key == 'x' || key == 'X')) {
     autoParticle = !autoParticle;
@@ -311,16 +331,11 @@ void keyPressed() {
     grid.updateParticles();
     println("forced a particle update");
   }
-  //a toggles whether sleeping particles have a border around them (if debug mode is enabled)
-  if (debug && (key == 'a' || key == 'A')) {
-    alphaSleep = !alphaSleep;
-    println("toggled alphaSleep", alphaSleep);
-  }
-  //s reshuffles the particlelist (if debug mode is enabled)
-  if (debug && (key == 's' || key == 'S'))
-  {
-    println("shuffling particlelist", autoFall);
-    grid.shuffleParticleList();
+  
+  //, toggles whether the game is lost (if debug mode is enabled)
+  if (debug && (key == ',')) {
+    lost = !lost;
+    println("toggled lose", lost);
   }
 
   //` toggles the functionality of the number row (if debug mode is enabled)
@@ -337,22 +352,6 @@ void keyPressed() {
   if (debug && key == '/') {
     debug = false;
     println("debug mode disabled");
-  }
-
- // toggles ghostBlock (if debug mode is enabled)
-  if (debug && (key == 'g' || key == 'G')) {
-    grid.ghostBlock = !grid.ghostBlock;
-  }
-
-  // p pauses everything
-  if (key == 'p' || key == 'P') {
-    paused = !paused;
-    println("toggled pause");
-  }
-
-  // L moves the tetromino up (only in debug mode)
-  if (debug && (key == 'l' || key == 'L')) {
-    grid.tetromino.up();
   }
 
   //sets the type to the (n - 1)th type/shape (except 0 is 9) (type/shape decided by numRowFunc) (if debug mode is enabled)
