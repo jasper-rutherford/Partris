@@ -78,7 +78,7 @@ public class Particle {
     //setting moved to true here prevents this.
     //setting interacted to true is likely redundant.
     moved = true;
-    interacted = true;
+    // interacted = true;
   }
 
   // public void setType(String type) {

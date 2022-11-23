@@ -33,6 +33,18 @@ public class FireParticle extends Particle
     {
       //replace this particle with a new air particle
       grid.replaceParticle(this, "Air");
+
+      //gain points from burning stuff
+      //burning plant
+      if (prevType.equals("Plant"))
+      {
+        addPoints(plantBurnPoints);
+      }
+      //burning charcoal
+      if (prevType.equals("Charcoal"))
+      {
+        addPoints(plantBurnPoints);
+      }
     }
 
     //mark that this particle moved

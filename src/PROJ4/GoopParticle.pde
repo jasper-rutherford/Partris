@@ -51,7 +51,7 @@ public class GoopParticle extends Particle
     }
 
     //only move if there is one best space
-    if (spaces.size() == 1)
+    if (spaces.size() != 0)
     {
       //choose a random particle from the list of spaces
       Particle chosen = spaces.get(int(random(0, spaces.size())));
@@ -90,7 +90,7 @@ public class GoopParticle extends Particle
   {
     // if (!didStuff)
     // {
-    //   doStuff();
+      // doStuff();
     // }
   }
 

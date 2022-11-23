@@ -31,8 +31,12 @@ float fullFactor = 3.0/5;
 
 //////////////////
 int level;
-int numClearedRows = 0;
-int rowsPerLevel = 10;
+int levelPoints;
+int plantBurnPoints = 1;
+int charcoalBurnPoints = 2;
+int dissolvePoints = 1;
+int pointsPerParticleCleared = 5;
+int levelPointsPerLevel = gridWidth * particlesPerEdge * particlesPerEdge * pointsPerParticleCleared * 10;
 float[] levelSpeeds = {48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1};//, 30, 27, 24, 21, 18, 15, 12, 9, 8, 7, 6, 5, 4, 3, 2, 1};//{24, 22, 19, 17, 14, 12, 9, 7, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1}; //represents how many ticks per block drop  
 
 float ticksPerSecond = 60.0;
@@ -145,8 +149,9 @@ void setup() {
     inputs.add(65);
     konami.add(65);
   }
+
   score = 0;
-  println("test2");
+  levelPoints = 0;
 
 
   setLevel(0);
@@ -159,59 +164,7 @@ void lose() {
     lost = true;
 
     println("lost");
-
-    ////wake up all air particles
-    //for (int x = 0; x < particlesPerEdge * gridWidth; x++) {
-    //  for (int y = 0; y < particlesPerEdge * gridHeight; y++) {
-    //    Particle p = grid.particleGrid[x][y];
-
-    //    if (p.type.equals("Air")) {
-    //      p.wake();
-    //    }
-    //  }
-    //}
   }
-}
-
-void rowWasCleared()
-{
-  //increment number of cleared rows
-  numClearedRows++;
-
-  //check if level was cleared
-  if (numClearedRows % rowsPerLevel == 0)
-  {
-    //advance to next level
-    setLevel(level + 1);
-  }
-
-  //print level update
-  println("~~~~~~~~~~~");
-  println("Level " + level);
-  println("Rows remaining: " + (rowsPerLevel - numClearedRows));
-  println("~~~~~~~~~~~");
-}
-
-void setLevel(int level)
-{
-  //reset number of cleared rows
-  numClearedRows = 0;
-
-  //update level counter
-  this.level = level;
-
-  //set game speed
-  if (level < levelSpeeds.length)
-  {
-    ticksPerBlockDrop = levelSpeeds[level];
-  }
-  else
-  {
-    ticksPerBlockDrop = levelSpeeds[levelSpeeds.length - 1];
-  }
-
-  nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
-  nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
 }
 
 void draw() 
@@ -433,6 +386,50 @@ void drawTextWithBorder(String text, float topLeftCornerX, float topLeftCornerY,
     text(text, topLeftCornerX, topLeftCornerY);
 }
 
+//add points to the score/level points
+void addPoints(int points)
+{
+  //increase score [points multiplier based on how fast the tetromino is falling]
+  score += int(points * (ticksPerSecond / ticksPerBlockDrop));
+
+  //add points to level tracker
+  levelPoints += points;
+
+  //go up a level
+  if (levelPoints >= levelPointsPerLevel)
+  {
+    levelPoints -= levelPointsPerLevel;
+
+    setLevel(level + 1);
+  }
+}
+
+void setLevel(int level)
+{
+  //update level counter
+  this.level = level;
+
+  //set game speed
+  if (level < levelSpeeds.length)
+  {
+    ticksPerBlockDrop = levelSpeeds[level];
+  }
+  else
+  {
+    ticksPerBlockDrop = levelSpeeds[levelSpeeds.length - 1];
+  }
+
+  nanosPerBlockDrop = 1000000000 / ticksPerSecond * ticksPerBlockDrop;
+  nanosPerParticleUpdate = nanosPerBlockDrop / particleUpdatesPerBlockDrop;
+
+  
+  //print level update
+  println("~~~~~~~~~~~");
+  println("Level " + level);
+  println("Level Points: " + levelPoints + "/" + levelPointsPerLevel);
+  println("~~~~~~~~~~~");
+}
+
 void konamiCheck(int code) {
   inputs.remove(0);
   inputs.add(code);
@@ -452,6 +449,12 @@ void konamiCheck(int code) {
 //lets me send in a Color to fill without any messing around
 void fill(Color colour) {
   fill(colour.r, colour.g, colour.b, colour.a);
+}
+
+//lets me send in a Color to stroke without any messing around
+void stroke(Color colour)
+{
+  stroke(colour.r, colour.g, colour.b, colour.a);
 }
 
 /*

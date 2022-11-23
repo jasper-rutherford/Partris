@@ -26,7 +26,7 @@ public class LavaParticle extends Particle
     if (down != null) 
     {
       //if the particle below this one is air
-      if (down.type.equals("Air")) 
+      if (down.type.equals("Air") || down.type.equals("Acid")) 
       {
         //add that particle to the list of spaces to move into
         openSpaces.add(down);
@@ -42,14 +42,14 @@ public class LavaParticle extends Particle
         Particle downRight = down.adjacentRight();
 
         //check the left diagonal for air
-        if (downLeft != null && downLeft.type.equals("Air")) 
+        if (downLeft != null && (downLeft.type.equals("Air") || downLeft.type.equals("Acid"))) 
         {
           //add that particle to the list of spaces to move into
           openSpaces.add(downLeft);
         }
 
         //check the right diagonal for air
-        if (downRight != null && downRight.type.equals("Air")) 
+        if (downRight != null && (downRight.type.equals("Air") || downRight.type.equals("Acid"))) 
         {
           //add that particle to the list of spaces to move into
           openSpaces.add(downRight);
@@ -67,14 +67,14 @@ public class LavaParticle extends Particle
       Particle right = adjacentRight();
 
       //check the left neighbor for air
-      if (left != null && left.type.equals("Air")) 
+      if (left != null && (left.type.equals("Air") || left.type.equals("Acid"))) 
       {
         //add to the list of spaces to move into
         openSpaces.add(left);
       }
 
       //check the right neighbor for air
-      if (right != null && right.type.equals("Air")) 
+      if (right != null && (right.type.equals("Air") || right.type.equals("Acid"))) 
       {
         //add to the list of spaces to move into
         openSpaces.add(right);

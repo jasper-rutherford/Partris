@@ -417,9 +417,9 @@ public class Grid {
       }
     }
 
-    //increase the score
-    //every particle you clear is 5 points
-    score += numParticles * 5;
+    //add points
+    addPoints(numParticles * pointsPerParticleCleared);
+
     //lower any rows above the newly cleared row
 
     //bottom up means that empty rows move upward until they are gone
@@ -437,9 +437,6 @@ public class Grid {
         }
       }
     }
-
-    //alert the main project that a row was cleared
-    rowWasCleared();
   }
 
 
@@ -513,13 +510,22 @@ public class Grid {
     fill(200, 200, 200);
     rect(cornerX, cornerY, totWidth, totHeight);
 
-
     //loop through/render full blocks
-    for (int x = 0; x < gridWidth; x++) {
-      for (int y = 0; y < gridHeight; y++) {
-        blocks[x][y].render();
-      }
-    }
+    // int val = 150;
+    // stroke(0, 0, 0, 0);
+    // for (int x = 0; x < gridWidth; x++) {
+    //   for (int y = 0; y < gridHeight; y++) {
+    //     blocks[x][y].render();
+    //   }
+    // }
+    // stroke(0, 0, 0);
+
+    // //loop through/render full blocks
+    // for (int x = 0; x < gridWidth; x++) {
+    //   for (int y = 0; y < gridHeight; y++) {
+    //     blocks[x][y].render();
+    //   }
+    // }
 
     //render the falling tetromino
     tetromino.render(true);
@@ -529,6 +535,7 @@ public class Grid {
       //duplicate the tetromino, but decrease the alpha
       Tetromino ghost = new Tetromino(tetromino);
       ghost.colour.a = 127;
+      // ghost.stroke = particleFactory.getColour(tetromino.type);
 
       if (ghost.type.equals("Charcoal")) {
         ghost.colour.a = int(255 * .75);
@@ -540,7 +547,7 @@ public class Grid {
       ghost.particleSlam();
 
       //render the ghost
-      ghost.render(false);
+      ghost.render(true);
     }
 
     //render the particles
@@ -551,6 +558,13 @@ public class Grid {
         particle.render();
       }
     }
+
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridHeight; y++) {
+        blocks[x][y].render();
+      }
+    }
+    stroke(0, 0, 0);
 
     //draw grid border
     strokeWeight(4);
@@ -672,8 +686,17 @@ public class Grid {
     //render the score
     drawTextWithBorder("Score: " + score, grid.cornerX - blockWidth * 7, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));
 
-    //render the level counter/progress
+    //render the level counter
     drawTextWithBorder("Level: " + level, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth * 1.25, 25, new Color(255, 255, 255), new Color(0, 0, 0));
-    drawTextWithBorder("Row " + numClearedRows + "/" + rowsPerLevel, grid.cornerX + blockWidth * 11, grid.cornerY - blockWidth / 4, 25, new Color(255, 255, 255), new Color(0, 0, 0));    
+
+    //render level points bar
+    fill(new Color(199, 199, 199));
+    rect(cornerX + 11.5 * blockWidth, cornerY - blockWidth * 5 / 6, 5 * blockWidth, 2.0 / 3 * blockWidth);
+    fill(new Color(61, 132, 245));
+    rect(cornerX + 11.5 * blockWidth, cornerY - blockWidth * 5 / 6, 5 * blockWidth * levelPoints / levelPointsPerLevel, 2.0 / 3 * blockWidth);
+
+    //render the level points
+    drawTextWithBorder(levelPoints + "/" + levelPointsPerLevel, grid.cornerX + blockWidth * 12, grid.cornerY - blockWidth / 3.7, 15, new Color(255, 255, 255), new Color(0, 0, 0));  
+    drawTextWithBorder("(" + int(levelPoints * 100 / levelPointsPerLevel) + "%)", grid.cornerX + blockWidth * (12 + 4.75), grid.cornerY - blockWidth / 3.7, 15, new Color(255, 255, 255), new Color(0, 0, 0));  
   }
 }

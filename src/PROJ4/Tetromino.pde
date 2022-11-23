@@ -12,6 +12,7 @@ public class Tetromino {
   public String type;
 
   public Color colour;
+  public Color stroke = new Color(0, 0, 0);
   public Block blocks[];
   public Particle particles[][];
 
@@ -340,20 +341,54 @@ public class Tetromino {
     }
   }
 
-  public void render(boolean drawText) {
-    if (drawText) {
+  public void render(boolean drawText) 
+  {
+    if (drawText) 
+    {
+      //get topmost block
+      Block top = blocks[0];
+
+      //get leftmost block
+      Block left = blocks[0];
+
+      //get rightmost block
+      Block right = blocks[0];
+
+      for (Block block : blocks) //grid.cornerX + (block.x + offsetX) * blockWidth
+      {
+        if (top.y > block.y)
+        {
+          top = block;
+        }
+        if (left.x > block.x)
+        {
+          left = block;
+        }
+        if (right.x < block.x)
+        {
+          right = block;
+        }
+      }
+
       // //render the text
       // textSize(50);
       // fill(255, 255, 255);
-      float textX = grid.cornerX + blockWidth * 3;
-      float textY = grid.cornerY - blockWidth / 3;
+      float textX = grid.cornerX + ((left.x + right.x) / 2 + offsetX) * blockWidth;
+      float textY = grid.cornerY + (top.y + offsetY) * blockWidth - blockWidth * .25;
+
+      float textX2 = grid.cornerX + blockWidth * 3;
+      float textY2 = grid.cornerY - blockWidth / 3;
+      float textY3 = grid.cornerY + (blockWidth * 21) + blockWidth / 1.5;
 
       if (type.equals("Charcoal")) {
         textX -= blockWidth * 1.5;
+        textX2 -= blockWidth * 1.5;
       } else if (type.equals("Ice")) {
         textX += blockWidth * 1;
+        textX2 += blockWidth * 1;
       } else if (type.equals("Fire")) {
         textX += blockWidth * .5;
+        textX2 += blockWidth * .5;
       }
       // for (int x = -1; x < 2; x++) {
       //   //  for(int y = -1; y < 2; y++){
@@ -366,24 +401,28 @@ public class Tetromino {
       // text(type, textX, textY);
       if (type.equals("Charcoal"))
       {
-        drawTextWithBorder(type, textX, textY, 50, new Color(25, 25, 25), new Color(100, 100, 100));
+        drawTextWithBorder(type, textX, textY, 25, new Color(25, 25, 25), new Color(100, 100, 100));
+        drawTextWithBorder(type, textX2, textY2, 50, new Color(25, 25, 25), new Color(100, 100, 100));
+        drawTextWithBorder(type, textX2, textY3, 50, new Color(25, 25, 25), new Color(100, 100, 100));
       }
       else
       {
-        drawTextWithBorder(type, textX, textY, 50, colour, new Color(0, 0, 0));
+        drawTextWithBorder(type, textX, textY, 25, grid.tetromino.colour, new Color(0, 0, 0));
+        drawTextWithBorder(type, textX2, textY2, 50, grid.tetromino.colour, new Color(0, 0, 0));
+        drawTextWithBorder(type, textX2, textY3, 50, grid.tetromino.colour, new Color(0, 0, 0));
       }
-
-      fill(colour);
-
-    } else
-    {
-      fill(colour);
     }
+    
+    fill(colour);
+    stroke(stroke);
+    
     //render the blocks
-    for (int lcv = 0; lcv < 4; lcv++) {
+    for (int lcv = 0; lcv < 4; lcv++) 
+    {
       Block block = blocks[lcv];
       rect(grid.cornerX + (block.x + offsetX) * blockWidth, grid.cornerY + (block.y + offsetY) * blockWidth + particleOffset * particleWidth, blockWidth, blockWidth);
     }
+    stroke(0, 0, 0);
   }
 
   public String toString() {
