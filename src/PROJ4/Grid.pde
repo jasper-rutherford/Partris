@@ -559,9 +559,20 @@ public class Grid {
       }
     }
 
+    //render blocks
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
         blocks[x][y].render();
+      }
+    }
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridHeight; y++) {
+        blocks[x][y].renderEdgeOutlines();
+      }
+    }
+    for (int x = 0; x < gridWidth; x++) {
+      for (int y = 0; y < gridHeight; y++) {
+        blocks[x][y].renderEdges();
       }
     }
     stroke(0, 0, 0);

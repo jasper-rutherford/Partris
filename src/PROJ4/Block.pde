@@ -24,57 +24,73 @@ public class Block {
 
   public void render()
   {
-    // //if (active) {
-    // //  noFill();
-    // //strokeWeight(2);
-    // //  rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
-    // //strokeWeight(1);
-    // //}
-    // Color fullColor = new Color(248, 143, 255);//209, 250, 160);//238, 255, 230);//
-    // Color emptyColor = new Color(200, 200, 200);//252, 241, 237);//255, 233, 227);//250, 178, 160);
-    // if (full) 
-    // {
-    //   fill(fullColor);
-    // }
-    // else
-    // {
-    //   fill(emptyColor);
-    // }
-    // // else
-    // // {
-    // //   fill(emptyColor);
-    // // }
-    // rect(grid.cornerX + blockWidth * x, grid.cornerY + blockWidth * y, blockWidth, blockWidth);
+    
+  }
 
+  public void renderEdgeOutlines()
+  {
     if (full)
     {
       float x = grid.cornerX + blockWidth * this.x;
-      float y = grid.cornerY + blockWidth * this.y;
-
-      //if left doesnt exist or is not full
-      if (adj("Left") == null || !adj("Left").full)
+      float y = grid.cornerY + blockWidth * this.y; boolean leftFull = adj("Left") == null || !adj("Left").full;
+      boolean left = (adj("Left") == null || !adj("Left").full);
+      boolean right = (adj("Right") == null || !adj("Right").full);
+      boolean up = (adj("Up") == null || !adj("Up").full);
+      boolean down = (adj("Down") == null || !adj("Down").full);
+      
+      if (left)
       {
         //draw edge
         helper(3, new Color(0, 0, 0), x, y, x, y + blockWidth);
+      }
+      if (right)
+      {
+        //draw edge
+        helper(3, new Color(0, 0, 0), x + blockWidth, y, x + blockWidth, y + blockWidth);
+      }
+      if (up)
+      {
+        //draw edge
+        helper(3, new Color(0, 0, 0), x, y, x + blockWidth, y);
+      }
+      if (down)
+      {
+        //draw edge
+        helper(3, new Color(0, 0, 0), x, y + blockWidth, x + blockWidth, y + blockWidth);
+      }
+    }
+  }
+
+  public void renderEdges()
+  {
+    if (full)
+    {
+      float x = grid.cornerX + blockWidth * this.x;
+      float y = grid.cornerY + blockWidth * this.y; boolean leftFull = adj("Left") == null || !adj("Left").full;
+      boolean left = (adj("Left") == null || !adj("Left").full);
+      boolean right = (adj("Right") == null || !adj("Right").full);
+      boolean up = (adj("Up") == null || !adj("Up").full);
+      boolean down = (adj("Down") == null || !adj("Down").full);
+    
+      if (left)
+      {
+        //draw edge
         helper(1, new Color(246, 255, 66), x, y, x, y + blockWidth);
       }
-      //if right doesnt exist or is not full
-      if (adj("Right") == null || !adj("Right").full)
+      if (right)
       {
-        helper(3, new Color(0, 0, 0), x + blockWidth, y, x + blockWidth, y + blockWidth);
+        //draw edge
         helper(1, new Color(246, 255, 66), x + blockWidth, y, x + blockWidth, y + blockWidth);
       }
-      //if down doesnt exist or is not full
-      if (adj("Down") == null || !adj("Down").full)
+      if (up)
       {
-        helper(3, new Color(0, 0, 0), x, y + blockWidth, x + blockWidth, y + blockWidth);
-        helper(1, new Color(246, 255, 66), x, y + blockWidth, x + blockWidth, y + blockWidth);
-      }
-      //if up doesnt exist or is not full
-      if (adj("Up") == null || !adj("Up").full)
-      {
-        helper(3, new Color(0, 0, 0), x, y, x + blockWidth, y);
+        //draw edge
         helper(1, new Color(246, 255, 66), x, y, x + blockWidth, y);
+      }
+      if (down)
+      {
+        //draw edge
+        helper(1, new Color(246, 255, 66), x, y + blockWidth, x + blockWidth, y + blockWidth);
       }
     }
   }

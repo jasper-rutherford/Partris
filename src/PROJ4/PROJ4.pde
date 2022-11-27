@@ -14,6 +14,8 @@
  Written by Jasper Rutherford
  */
 
+float version = 1.4;
+
 int blockWidth = 30;
 int gridWidth = 10;
 int gridHeight = 20;
@@ -91,7 +93,7 @@ int score;
 
 void setup() {
   size(900, 800);
-  surface.setTitle("Partris");
+  surface.setTitle("Partris v" + version);
   lost = false;
 
   //create the particle factory
